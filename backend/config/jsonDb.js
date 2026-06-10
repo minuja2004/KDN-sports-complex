@@ -17,7 +17,7 @@ const initDbFile = () => {
           id: 'admin-1',
           username: 'admin',
           email: 'admin@kdnsport.com',
-          password: '$2a$10$wO3k6g.e5z7/T/vSGeKCeO9b0qF69UaN70l69XGZl24C.81W2BcyK', // bcrypt hash for 'admin123'
+          password: '$2a$10$8zuLNbvla6fNhwtc8o6BEusp5GK2tRUqlfuby0OyANpWL7p63QaHi', // bcrypt hash for 'admin123'
           role: 'admin',
           createdAt: new Date().toISOString()
         }
