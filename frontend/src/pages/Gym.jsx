@@ -16,7 +16,7 @@ const Gym = ({ user }) => {
     {
       id: 'monthly',
       name: 'Starter Plan',
-      price: 29.99,
+      price: 8997.00,
       duration: 'Monthly',
       features: ['Full gym equipment access', 'Standard locker amenities', '1 Fitness consultation', 'Open gym hours (5am-11pm)'],
       icon: <Zap size={20} />
@@ -24,7 +24,7 @@ const Gym = ({ user }) => {
     {
       id: 'quarterly',
       name: 'Champion Plan',
-      price: 79.99,
+      price: 23997.00,
       duration: 'Quarterly',
       features: ['All Starter Plan features', 'Free group classes admission', '3 Personal coaching hours', 'Shower & sauna amenities'],
       icon: <Award size={20} style={{ color: 'var(--primary)' }} />,
@@ -33,7 +33,7 @@ const Gym = ({ user }) => {
     {
       id: 'annual',
       name: 'Titanium Club',
-      price: 249.99,
+      price: 74997.00,
       duration: 'Annual',
       features: ['All Champion features', 'Unlimited body fat analyses', 'Customized monthly nutrition log', '1 Free gym t-shirt & bottle', 'Priority court booking privilege'],
       icon: <Sparkles size={20} style={{ color: '#fbbf24' }} />
@@ -159,7 +159,7 @@ const Gym = ({ user }) => {
 
             <div>
               <div style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Paid Amount</div>
-              <h3 style={{ fontSize: '1.6rem', color: '#fff', fontWeight: 800 }}>${memberData.price.toFixed(2)}</h3>
+              <h3 style={{ fontSize: '1.6rem', color: '#fff', fontWeight: 800 }}>රු {memberData.price.toFixed(2)}</h3>
               <span className="badge badge-success" style={{ marginTop: '0.25rem' }}>Payment Cleared</span>
             </div>
           </div>
@@ -221,7 +221,7 @@ const Gym = ({ user }) => {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: '1.5rem' }}>
-                <span style={{ fontSize: '2.2rem', fontWeight: 800, color: '#fff' }}>${tier.price}</span>
+                <span style={{ fontSize: '2.2rem', fontWeight: 800, color: '#fff' }}>රු {tier.price.toFixed(2)}</span>
                 <span className="text-muted" style={{ fontSize: '0.9rem', marginLeft: '0.25rem' }}>/ {tier.duration.toLowerCase()}</span>
               </div>
 
@@ -274,7 +274,7 @@ const Gym = ({ user }) => {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                 <span>Total Charge:</span>
-                <strong style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>${selectedTier.price.toFixed(2)}</strong>
+                <strong style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>රු {selectedTier.price.toFixed(2)}</strong>
               </div>
             </div>
 

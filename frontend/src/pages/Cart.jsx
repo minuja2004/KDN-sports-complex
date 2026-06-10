@@ -182,7 +182,7 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
                     <div style={{ flexGrow: 1 }}>
                       <span className="text-primary" style={{ fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase' }}>{item.category}</span>
                       <h4 style={{ fontSize: '1.05rem', margin: '0.1rem 0 0.25rem' }}>{item.name}</h4>
-                      <span style={{ fontWeight: 600, color: '#fff' }}>Rs. {item.price.toFixed(2)}</span>
+                      <span style={{ fontWeight: 600, color: '#fff' }}>රු {item.price.toFixed(2)}</span>
                     </div>
 
                     {/* Quantity Controls */}
@@ -209,19 +209,19 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', fontSize: '0.9rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span className="text-muted">Subtotal:</span>
-                  <span>Rs. {cartTotal().toFixed(2)}</span>
+                  <span>රු {cartTotal().toFixed(2)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span className="text-muted">Delivery Charge:</span>
                   {deliveryMethod === 'delivery' ? (
-                    <span style={{ color: 'var(--primary)' }}>Rs. 300.00</span>
+                    <span style={{ color: 'var(--primary)' }}>රු 300.00</span>
                   ) : (
                     <span style={{ color: 'var(--success)' }}>Free</span>
                   )}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: 'bold', color: '#fff', marginTop: '0.5rem' }}>
                   <span>Total Amount:</span>
-                  <span style={{ color: 'var(--primary)' }}>Rs. {orderTotal.toFixed(2)}</span>
+                  <span style={{ color: 'var(--primary)' }}>රු {orderTotal.toFixed(2)}</span>
                 </div>
               </div>
 

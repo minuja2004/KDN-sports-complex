@@ -30,7 +30,7 @@ router.get('/:id', async (req, res) => {
 
 // POST /api/products - Admin: Create new product listing
 router.post('/', verifyAdmin, async (req, res) => {
-  const { name, description, price, image, category, stock } = req.body;
+  const { name, description, price, image, category, stock, allowKoko } = req.body;
 
   if (!name || !price || !category || stock === undefined) {
     return res.status(400).json({ message: 'Name, price, category, and stock are required' });
@@ -56,7 +56,8 @@ router.post('/', verifyAdmin, async (req, res) => {
       image: imageUrl,
       category,
       stock: parseInt(stock),
-      rating: 5.0
+      rating: 5.0,
+      allowKoko: allowKoko === true || allowKoko === 'true'
     });
 
     res.status(201).json(newProduct);
@@ -68,7 +69,7 @@ router.post('/', verifyAdmin, async (req, res) => {
 // PUT /api/products/:id - Admin: Edit product details
 router.put('/:id', verifyAdmin, async (req, res) => {
   const { id } = req.params;
-  const { name, description, price, image, category, stock } = req.body;
+  const { name, description, price, image, category, stock, allowKoko } = req.body;
 
   try {
     const product = await Products.findById(id);
@@ -94,7 +95,8 @@ router.put('/:id', verifyAdmin, async (req, res) => {
       price: price !== undefined ? parseFloat(price) : product.price,
       image: imageUrl || product.image,
       category: category || product.category,
-      stock: stock !== undefined ? parseInt(stock) : product.stock
+      stock: stock !== undefined ? parseInt(stock) : product.stock,
+      allowKoko: allowKoko !== undefined ? (allowKoko === true || allowKoko === 'true') : product.allowKoko
     });
 
     res.json(updated);

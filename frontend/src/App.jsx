@@ -12,6 +12,7 @@ import Cart from './pages/Cart';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import SecretGatekeeper from './pages/SecretGatekeeper';
+import ProductDetails from './pages/ProductDetails';
 import { api } from './utils/api';
 
 // Inner wrapper to access route location
@@ -156,6 +157,7 @@ const AppContent = ({ user, onLogin, onLogout }) => {
           <Route path="/badminton" element={<Badminton user={user} />} />
           <Route path="/physio" element={<Physio user={user} />} />
           <Route path="/shop" element={<Shop user={user} addToCart={addToCart} />} />
+          <Route path="/shop/product/:id" element={<ProductDetails user={user} addToCart={addToCart} />} />
           <Route path="/cart" element={<Cart user={user} cart={cart} updateQuantity={updateQuantity} cartTotal={cartTotal} clearCart={clearCart} />} />
           <Route 
             path="/login" 

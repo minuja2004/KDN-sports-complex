@@ -290,7 +290,7 @@ const Badminton = ({ user }) => {
                     <span className="text-muted">Time Slot:</span> <strong style={{ color: '#fff' }}>{selectedSlot.slot}</strong>
                   </div>
                   <div style={{ fontSize: '0.9rem' }}>
-                    <span className="text-muted">Hourly Rate:</span> <strong style={{ color: '#fff' }}>$15.00</strong>
+                    <span className="text-muted">Hourly Rate:</span> <strong style={{ color: '#fff' }}>රු 1,500.00</strong>
                   </div>
                 </div>
 

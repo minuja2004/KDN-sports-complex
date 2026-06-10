@@ -63,7 +63,8 @@ const ProductSchema = new mongoose.Schema({
   image: String,
   category: String,
   stock: Number,
-  rating: Number
+  rating: Number,
+  allowKoko: { type: Boolean, default: false }
 });
 
 const OrderSchema = new mongoose.Schema({

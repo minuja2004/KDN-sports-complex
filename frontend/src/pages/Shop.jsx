@@ -165,7 +165,12 @@ const Shop = ({ user, cart = [], addToCart }) => {
       ) : (
         <div className="grid-3" style={{ marginBottom: '4rem' }}>
           {filteredProducts.map(product => (
-            <div key={product.id} className="card card-accent" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#141416' }}>
+            <div 
+              key={product.id} 
+              className="card card-accent" 
+              style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#141416', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
+              onClick={() => navigate(`/shop/product/${product.id}`)}
+            >
               <div>
                 <img
                   src={product.image}
@@ -188,14 +193,61 @@ const Shop = ({ user, cart = [], addToCart }) => {
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>Rs. {product.price.toFixed(2)}</span>
+                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>රු {product.price.toFixed(2)}</span>
                   <span style={{ fontSize: '0.75rem', color: product.stock > 0 ? 'var(--success)' : 'var(--error)' }}>
-                    {product.stock > 0 ? `In Stock: ${product.stock}` : 'Out of Stock'}
+                    {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
                   </span>
                 </div>
 
+                {product.allowKoko && (
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '6px', 
+                    fontSize: '0.8rem', 
+                    color: '#a0aec0', 
+                    marginTop: '-0.5rem', 
+                    marginBottom: '1rem' 
+                  }}>
+                    <span>or 3 X <strong style={{ color: '#fff' }}>රු {(product.price / 3).toFixed(2)}</strong> with</span>
+                    <svg viewBox="0 0 135 45" width="55" height="18" style={{ verticalAlign: 'middle', marginLeft: '3px', marginRight: '3px' }}>
+                      <defs>
+                        <pattern id="koko-stripes" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                          <rect width="4" height="4" fill="#00D2CA" />
+                          <line x1="0" y1="0" x2="0" y2="4" stroke="#0D1B50" strokeWidth="1.2" />
+                        </pattern>
+                      </defs>
+                      <text x="2" y="37" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                      <text x="3" y="36" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                      <text x="4" y="35" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                      <text x="5" y="34" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="#FFAEC9" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                    </svg>
+                    <span 
+                      style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        width: '14px', 
+                        height: '14px', 
+                        borderRadius: '50%', 
+                        backgroundColor: '#2d3748', 
+                        color: '#a0aec0', 
+                        fontSize: '9px', 
+                        fontWeight: 'bold', 
+                        cursor: 'help' 
+                      }} 
+                      title="Split your bill into 3 interest-free installments with Koko"
+                    >
+                      i
+                    </span>
+                  </div>
+                )}
+
                 <button
-                  onClick={() => handleAddClick(product)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddClick(product);
+                  }}
                   className={`btn ${addedProductId === product.id ? 'btn-success-added' : 'btn-outline'}`}
                   style={{ width: '100%' }}
                   disabled={product.stock <= 0}
@@ -243,7 +295,7 @@ const Shop = ({ user, cart = [], addToCart }) => {
                     </div>
                     <div>
                       <span className="text-muted" style={{ fontSize: '0.8rem', display: 'block' }}>TOTAL AMOUNT</span>
-                      <span style={{ fontSize: '1.1rem', color: 'var(--primary)', fontWeight: 'bold' }}>Rs. {order.totalAmount.toFixed(2)}</span>
+                      <span style={{ fontSize: '1.1rem', color: 'var(--primary)', fontWeight: 'bold' }}>රු {order.totalAmount.toFixed(2)}</span>
                     </div>
                     <div>
                       <span className="text-muted" style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.25rem' }}>STATUS</span>
@@ -260,7 +312,7 @@ const Shop = ({ user, cart = [], addToCart }) => {
                       {order.items.map((item, idx) => (
                         <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#fff' }}>
                           <span>{item.name} <span style={{ color: 'var(--text-muted)' }}>x{item.quantity}</span></span>
-                          <span>Rs. {(item.price * item.quantity).toFixed(2)}</span>
+                          <span>රු {(item.price * item.quantity).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>

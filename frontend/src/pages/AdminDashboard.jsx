@@ -45,7 +45,8 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
     price: '',
     image: '',
     category: 'protein',
-    stock: ''
+    stock: '',
+    allowKoko: true
   });
 
   // Gym Member Modal state
@@ -216,7 +217,8 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
       price: '',
       image: '',
       category: 'protein',
-      stock: ''
+      stock: '',
+      allowKoko: true
     });
     setProductModalOpen(true);
   };
@@ -229,7 +231,8 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
       price: product.price,
       image: product.image,
       category: product.category,
-      stock: product.stock
+      stock: product.stock,
+      allowKoko: product.allowKoko !== undefined ? product.allowKoko : true
     });
     setProductModalOpen(true);
   };
@@ -261,7 +264,8 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
         price: parseFloat(productForm.price),
         image: productForm.image,
         category: productForm.category,
-        stock: parseInt(productForm.stock)
+        stock: parseInt(productForm.stock),
+        allowKoko: productForm.allowKoko
       };
 
       if (editingProduct) {
@@ -572,16 +576,35 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                         <span style={{ fontSize: '0.85rem' }}>{order.shippingDetails.address} (Tel: {order.shippingDetails.phone})</span>
                       </div>
                       <div>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Fulfillment Status:</span>
-                        <span className={`badge ${
-                          order.orderStatus === 'Pending' ? 'badge-pending' :
-                          order.orderStatus === 'Approved' ? 'badge-success' :
-                          order.orderStatus === 'Shipped' ? 'badge-info' : 'badge-success'
-                        }`}>{order.orderStatus}</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>Fulfillment Status:</span>
+                        <select
+                          value={order.orderStatus}
+                          onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                          className="form-input"
+                          style={{
+                            padding: '0.2rem 0.5rem',
+                            fontSize: '0.8rem',
+                            width: 'auto',
+                            minWidth: '110px',
+                            backgroundColor: '#141416',
+                            border: '1px solid var(--border)',
+                            color: order.orderStatus === 'Pending' ? '#fbbf24' :
+                                   order.orderStatus === 'Approved' ? '#34d399' :
+                                   order.orderStatus === 'Shipped' ? '#60a5fa' : '#a78bfa',
+                            fontWeight: 'bold',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <option value="Pending" style={{ color: '#fbbf24', backgroundColor: '#141416' }}>Pending</option>
+                          <option value="Approved" style={{ color: '#34d399', backgroundColor: '#141416' }}>Approved</option>
+                          <option value="Shipped" style={{ color: '#60a5fa', backgroundColor: '#141416' }}>Shipped</option>
+                          <option value="Delivered" style={{ color: '#a78bfa', backgroundColor: '#141416' }}>Delivered</option>
+                        </select>
                       </div>
                       <div>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Charged amount:</span>
-                        <strong style={{ color: 'var(--primary)' }}>${order.totalAmount.toFixed(2)}</strong>
+                        <strong style={{ color: 'var(--primary)' }}>රු {order.totalAmount.toFixed(2)}</strong>
                       </div>
                     </div>
 
@@ -598,56 +621,14 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                       </div>
 
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {order.orderStatus === 'Pending' && (
-                          <>
-                            <button
-                              onClick={() => handleUpdateOrderStatus(order.id, 'Approved')}
-                              className="btn btn-secondary"
-                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: 'var(--success)' }}
-                            >
-                              <CheckCircle2 size={14} style={{ marginRight: '4px' }} />
-                              Accept Order
-                            </button>
-                            <button
-                              onClick={() => handleDeleteOrder(order.id)}
-                              className="btn btn-secondary"
-                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: 'var(--error)' }}
-                            >
-                              <Trash2 size={14} style={{ marginRight: '4px' }} />
-                              Cancel/Delete
-                            </button>
-                          </>
-                        )}
-                        {order.orderStatus === 'Approved' && (
-                          <button
-                            onClick={() => handleUpdateOrderStatus(order.id, 'Shipped')}
-                            className="btn btn-secondary"
-                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: '#60a5fa' }}
-                          >
-                            <Truck size={14} style={{ marginRight: '4px' }} />
-                            Ship Order
-                          </button>
-                        )}
-                        {order.orderStatus === 'Shipped' && (
-                          <button
-                            onClick={() => handleUpdateOrderStatus(order.id, 'Delivered')}
-                            className="btn btn-secondary"
-                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: 'var(--success)' }}
-                          >
-                            <Check size={14} style={{ marginRight: '4px' }} />
-                            Deliver
-                          </button>
-                        )}
-                        {order.orderStatus === 'Delivered' && (
-                          <button
-                            onClick={() => handleDeleteOrder(order.id)}
-                            className="btn btn-secondary"
-                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: 'var(--error)' }}
-                          >
-                            <Trash2 size={14} style={{ marginRight: '4px' }} />
-                            Remove Record
-                          </button>
-                        )}
+                        <button
+                          onClick={() => handleDeleteOrder(order.id)}
+                          className="btn btn-secondary"
+                          style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: 'var(--error)', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          <Trash2 size={14} />
+                          Cancel/Delete Order
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -692,7 +673,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                         </td>
                         <td style={{ fontWeight: 600 }}>{p.name}</td>
                         <td><span className="badge badge-info" style={{ textTransform: 'capitalize' }}>{p.category}</span></td>
-                        <td><strong>${p.price.toFixed(2)}</strong></td>
+                        <td><strong>රු {p.price.toFixed(2)}</strong></td>
                         <td>
                           <span style={{ color: p.stock > 10 ? 'var(--success)' : p.stock > 0 ? 'var(--warning)' : 'var(--error)', fontWeight: 600 }}>
                             {p.stock} units
@@ -848,13 +829,13 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">Price ($ USD)</label>
+                  <label className="form-label">Price (රු LKR)</label>
                   <input
                     type="number"
                     step="0.01"
                     required
                     className="form-input"
-                    placeholder="59.99"
+                    placeholder="16500.00"
                     value={productForm.price}
                     onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
                   />
@@ -897,6 +878,23 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                     style={{ padding: '0.45rem 0.8rem' }}
                   />
                 </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontSize: '0.9rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={productForm.allowKoko}
+                    onChange={(e) => setProductForm({ ...productForm, allowKoko: e.target.checked })}
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      cursor: 'pointer',
+                      accentColor: 'var(--primary)'
+                    }}
+                  />
+                  <span>Allow Koko Installment (BNPL) logo & pricing display</span>
+                </label>
               </div>
 
               {productForm.image && (
@@ -984,7 +982,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Plan Price ($)</label>
+                  <label className="form-label">Plan Price (රු)</label>
                   <input
                     type="number"
                     step="0.01"
