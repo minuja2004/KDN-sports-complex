@@ -1,0 +1,103 @@
+const express = require('express');
+const router = express.Router();
+const { GymMembers } = require('../config/db');
+const { verifyToken, verifyAdmin } = require('../middleware/auth');
+
+// GET /api/gym/member - Get active gym membership details for logged-in user
+router.get('/member', verifyToken, (req, res) => {
+  try {
+    const member = GymMembers.findOne({ userId: req.user.id });
+    if (!member) {
+      return res.status(404).json({ message: 'No gym membership found for this user.' });
+    }
+    res.json(member);
+  } catch (err) {
+    res.status(500).json({ message: 'Error retrieving gym profile', error: err.message });
+  }
+});
+
+// GET /api/gym/all - Admin: view all registered gym members
+router.get('/all', verifyAdmin, (req, res) => {
+  try {
+    const list = GymMembers.find();
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ message: 'Error retrieving gym members list', error: err.message });
+  }
+});
+
+// POST /api/gym/register - Register gym membership
+router.post('/register', verifyToken, (req, res) => {
+  const { tier, price, paymentStatus } = req.body;
+
+  if (!tier || !price) {
+    return res.status(400).json({ message: 'Tier and price are required' });
+  }
+
+  try {
+    // Check if user already has gym membership
+    const existing = GymMembers.findOne({ userId: req.user.id });
+    
+    const startDate = new Date();
+    const endDate = new Date();
+    
+    if (tier.toLowerCase() === 'monthly') {
+      endDate.setMonth(startDate.getMonth() + 1);
+    } else if (tier.toLowerCase() === 'quarterly') {
+      endDate.setMonth(startDate.getMonth() + 3);
+    } else if (tier.toLowerCase() === 'annual') {
+      endDate.setFullYear(startDate.getFullYear() + 1);
+    } else {
+      endDate.setMonth(startDate.getMonth() + 1); // default 1 month
+    }
+
+    const membershipData = {
+      userId: req.user.id,
+      userName: req.user.username,
+      userEmail: req.user.email,
+      tier,
+      price: parseFloat(price),
+      paymentStatus: paymentStatus || 'Paid', // default paid for demo checkout
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
+      status: 'Active'
+    };
+
+    let result;
+    if (existing) {
+      // Renew or update existing membership
+      result = GymMembers.findByIdAndUpdate(existing.id, membershipData);
+    } else {
+      // Create new membership
+      result = GymMembers.create(membershipData);
+    }
+
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(500).json({ message: 'Error registering gym membership', error: err.message });
+  }
+});
+
+// PUT /api/gym/member/:id/status - Admin: update payment/status
+router.put('/member/:id/status', verifyAdmin, (req, res) => {
+  const { id } = req.params;
+  const { paymentStatus, status } = req.body;
+  
+  try {
+    const member = GymMembers.findById(id);
+    if (!member) {
+      return res.status(404).json({ message: 'Gym member not found' });
+    }
+
+    const updated = GymMembers.findByIdAndUpdate(id, {
+      paymentStatus: paymentStatus || member.paymentStatus,
+      status: status || member.status
+    });
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating membership status', error: err.message });
+  }
+});
+
+module.exports = router;
