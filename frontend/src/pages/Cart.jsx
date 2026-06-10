@@ -5,6 +5,7 @@ import { api } from '../utils/api';
 
 const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
   const navigate = useNavigate();
+  const [deliveryMethod, setDeliveryMethod] = useState('delivery'); // 'delivery' or 'pickup'
   const [shipping, setShipping] = useState({ name: '', address: '', phone: '' });
   const [orderProcessing, setOrderProcessing] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
@@ -12,8 +13,19 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
 
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault();
-    if (!shipping.name || !shipping.address || !shipping.phone) {
-      setError('Please complete all shipping details.');
+
+    // Clean phone number (strip whitespace, dashes, brackets)
+    const cleanPhone = shipping.phone.replace(/[\s-()]/g, '');
+    const phonePattern = /^\d{10}$/;
+    if (!phonePattern.test(cleanPhone)) {
+      setError('Contact Phone must be exactly 10 digits (e.g. 0771234567).');
+      return;
+    }
+
+    const address = deliveryMethod === 'delivery' ? shipping.address : 'Store Pickup (KDN Head Office)';
+
+    if (!shipping.name || !cleanPhone || (deliveryMethod === 'delivery' && !shipping.address)) {
+      setError('Please complete all required fields.');
       return;
     }
 
@@ -23,7 +35,11 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
     try {
       const orderPayload = {
         items: cart,
-        shippingDetails: shipping,
+        shippingDetails: {
+          name: shipping.name,
+          address: address,
+          phone: cleanPhone
+        },
         totalAmount: cartTotal()
       };
 
@@ -148,8 +164,31 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
               )}
 
               <form onSubmit={handleCheckoutSubmit}>
-                <h4 style={{ fontSize: '0.95rem', marginBottom: '1rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Shipping details</h4>
+                <h4 style={{ fontSize: '0.95rem', marginBottom: '1rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Fulfillment details</h4>
                 
+                {/* Delivery Option Selector */}
+                <div className="form-group">
+                  <label className="form-label">Delivery Option</label>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                    <button
+                      type="button"
+                      className={`btn ${deliveryMethod === 'delivery' ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', borderRadius: '4px' }}
+                      onClick={() => setDeliveryMethod('delivery')}
+                    >
+                      🚚 Delivery
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn ${deliveryMethod === 'pickup' ? 'btn-primary' : 'btn-secondary'}`}
+                      style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', borderRadius: '4px' }}
+                      onClick={() => setDeliveryMethod('pickup')}
+                    >
+                      🏢 Store Pickup
+                    </button>
+                  </div>
+                </div>
+
                 <div className="form-group">
                   <label className="form-label">Recipient Name</label>
                   <input
@@ -162,27 +201,46 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
                   />
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Delivery Address</label>
-                  <input
-                    type="text"
-                    required
-                    className="form-input"
-                    value={shipping.address}
-                    onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
-                    placeholder="Street Address, City"
-                  />
-                </div>
+                {deliveryMethod === 'delivery' ? (
+                  <div className="form-group">
+                    <label className="form-label">Delivery Address</label>
+                    <input
+                      type="text"
+                      required
+                      className="form-input"
+                      value={shipping.address}
+                      onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
+                      placeholder="Street Address, City"
+                    />
+                  </div>
+                ) : (
+                  <div className="form-group">
+                    <label className="form-label">Collection Location</label>
+                    <div style={{
+                      backgroundColor: 'var(--bg-surface-elevated)',
+                      border: '1px solid var(--border)',
+                      padding: '0.75rem',
+                      borderRadius: '6px',
+                      fontSize: '0.85rem',
+                      color: 'var(--text-muted)',
+                      lineHeight: '1.4'
+                    }}>
+                      📍 <strong>KDN Sports Complex Head Office</strong><br/>
+                      123 Complex Boulevard, Colombo
+                    </div>
+                  </div>
+                )}
 
                 <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                  <label className="form-label">Contact Phone</label>
+                  <label className="form-label">Contact Phone (10 Digits)</label>
                   <input
                     type="tel"
                     required
                     className="form-input"
                     value={shipping.phone}
                     onChange={(e) => setShipping({ ...shipping, phone: e.target.value })}
-                    placeholder="+94 77 123 4567"
+                    placeholder="0771234567"
+                    maxLength={15}
                   />
                 </div>
 
