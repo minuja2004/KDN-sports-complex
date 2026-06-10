@@ -12,6 +12,20 @@ const Shop = ({ user, cart = [], addToCart }) => {
   
   const [orderSuccess, setOrderSuccess] = useState(null);
   const [myOrders, setMyOrders] = useState([]);
+  const [addedProductId, setAddedProductId] = useState(null);
+
+  const handleAddClick = (product) => {
+    const success = addToCart(product);
+    if (success) {
+      setAddedProductId(product.id);
+      if (window.addedBtnTimeout) {
+        clearTimeout(window.addedBtnTimeout);
+      }
+      window.addedBtnTimeout = setTimeout(() => {
+        setAddedProductId(null);
+      }, 1500);
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -181,13 +195,22 @@ const Shop = ({ user, cart = [], addToCart }) => {
                 </div>
 
                 <button
-                  onClick={() => addToCart(product)}
-                  className="btn btn-outline"
+                  onClick={() => handleAddClick(product)}
+                  className={`btn ${addedProductId === product.id ? 'btn-success-added' : 'btn-outline'}`}
                   style={{ width: '100%' }}
                   disabled={product.stock <= 0}
                 >
-                  <ShoppingCart size={14} />
-                  Add to Cart
+                  {addedProductId === product.id ? (
+                    <>
+                      <CheckCircle size={14} />
+                      Added!
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart size={14} />
+                      Add to Cart
+                    </>
+                  )}
                 </button>
               </div>
             </div>

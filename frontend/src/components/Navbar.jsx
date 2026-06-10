@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Dumbbell, Calendar, Activity, ShoppingBag, Lock, LogIn, LogOut, LayoutDashboard } from 'lucide-react';
 
-const Navbar = ({ user, onLogout, cart = [], cartTotal }) => {
+const Navbar = ({ user, onLogout, cart = [], cartTotal, showCartDropdown, setShowCartDropdown }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [cartHovered, setCartHovered] = useState(false);
@@ -90,7 +90,7 @@ const Navbar = ({ user, onLogout, cart = [], cartTotal }) => {
                 )}
               </Link>
 
-              {cartHovered && (
+              {(cartHovered || showCartDropdown) && (
                 <div className="nav-cart-dropdown">
                   <div className="dropdown-header">
                     <h4>Shopping Cart</h4>

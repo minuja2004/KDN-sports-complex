@@ -26,6 +26,8 @@ const AppContent = ({ user, onLogin, onLogout }) => {
     const saved = localStorage.getItem('kdn_cart');
     return saved ? JSON.parse(saved) : [];
   });
+  
+  const [showCartDropdown, setShowCartDropdown] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('kdn_cart', JSON.stringify(cart));
@@ -44,6 +46,8 @@ const AppContent = ({ user, onLogin, onLogout }) => {
     }
 
     const existing = cart.find(item => item.id === product.id);
+    let success = false;
+    
     if (existing) {
       if (existing.quantity >= product.stock) {
         alert(`Sorry, only ${product.stock} units are available in stock.`);
@@ -54,9 +58,23 @@ const AppContent = ({ user, onLogin, onLogout }) => {
           ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
+      success = true;
     } else {
       setCart([...cart, { ...product, quantity: 1 }]);
+      success = true;
     }
+
+    if (success) {
+      // Trigger temporary preview dropdown open for 3 seconds
+      setShowCartDropdown(true);
+      if (window.cartDropdownTimeout) {
+        clearTimeout(window.cartDropdownTimeout);
+      }
+      window.cartDropdownTimeout = setTimeout(() => {
+        setShowCartDropdown(false);
+      }, 3000);
+    }
+
     return true;
   };
 
@@ -129,7 +147,7 @@ const AppContent = ({ user, onLogin, onLogout }) => {
 
   return (
     <div className="app-container">
-      <Navbar user={user} onLogout={onLogout} cart={cart} cartTotal={cartTotal} />
+      <Navbar user={user} onLogout={onLogout} cart={cart} cartTotal={cartTotal} showCartDropdown={showCartDropdown} setShowCartDropdown={setShowCartDropdown} />
       
       <main className="main-content">
         <Routes>
