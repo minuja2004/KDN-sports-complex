@@ -5,26 +5,72 @@ import { api } from '../utils/api';
 
 const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
   const navigate = useNavigate();
-  const [deliveryMethod, setDeliveryMethod] = useState('delivery'); // 'delivery' or 'pickup'
-  const [shipping, setShipping] = useState({ name: '', address: '', phone: '' });
+  
+  // Load preset from local storage if exists
+  const [shipping, setShipping] = useState(() => {
+    const saved = localStorage.getItem('kdn_shipping_preset');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          name: parsed.name || '',
+          street: parsed.street || '',
+          city: parsed.city || '',
+          state: parsed.state || '',
+          postalCode: parsed.postalCode || '',
+          otherDetails: parsed.otherDetails || '',
+          phone: parsed.phone || ''
+        };
+      } catch (e) {
+        console.error('Failed to parse preset:', e);
+      }
+    }
+    return { name: '', street: '', city: '', state: '', postalCode: '', otherDetails: '', phone: '' };
+  });
+
+  const [deliveryMethod, setDeliveryMethod] = useState(() => {
+    const saved = localStorage.getItem('kdn_shipping_preset');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.deliveryMethod || 'delivery';
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    return 'delivery';
+  });
+
   const [orderProcessing, setOrderProcessing] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
   const [error, setError] = useState('');
 
+  // Handle phone changes to force numbers-only and cap at 10 digits
+  const handlePhoneChange = (e) => {
+    const val = e.target.value.replace(/\D/g, ''); // Remove non-numbers
+    if (val.length <= 10) {
+      setShipping(prev => ({ ...prev, phone: val }));
+    }
+  };
+
   const handleCheckoutSubmit = async (e) => {
     e.preventDefault();
 
-    // Clean phone number (strip whitespace, dashes, brackets)
-    const cleanPhone = shipping.phone.replace(/[\s-()]/g, '');
-    const phonePattern = /^\d{10}$/;
-    if (!phonePattern.test(cleanPhone)) {
-      setError('Contact Phone must be exactly 10 digits (e.g. 0771234567).');
+    if (shipping.phone.length !== 10) {
+      setError('Contact Phone must be exactly 10 digits.');
       return;
     }
 
-    const address = deliveryMethod === 'delivery' ? shipping.address : 'Store Pickup (KDN Head Office)';
+    let address = 'Store Pickup (KDN Head Office)';
+    if (deliveryMethod === 'delivery') {
+      if (!shipping.street || !shipping.city || !shipping.state || !shipping.postalCode) {
+        setError('Please complete all delivery address fields (Street, City, State, Postal Code).');
+        return;
+      }
+      address = `${shipping.street}, ${shipping.city}, ${shipping.state}, ${shipping.postalCode}${shipping.otherDetails ? ` (${shipping.otherDetails})` : ''}`;
+    }
 
-    if (!shipping.name || !cleanPhone || (deliveryMethod === 'delivery' && !shipping.address)) {
+    if (!shipping.name || !shipping.phone) {
       setError('Please complete all required fields.');
       return;
     }
@@ -32,27 +78,45 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
     setOrderProcessing(true);
     setError('');
 
+    const deliveryCharge = deliveryMethod === 'delivery' ? 300 : 0;
+    const orderTotal = cartTotal() + deliveryCharge;
+
     try {
       const orderPayload = {
         items: cart,
         shippingDetails: {
           name: shipping.name,
           address: address,
-          phone: cleanPhone
+          phone: shipping.phone
         },
-        totalAmount: cartTotal()
+        totalAmount: orderTotal
       };
 
       const result = await api.orders.create(orderPayload);
+
+      // Save to presets for future checkout convenience
+      localStorage.setItem('kdn_shipping_preset', JSON.stringify({
+        name: shipping.name,
+        street: shipping.street,
+        city: shipping.city,
+        state: shipping.state,
+        postalCode: shipping.postalCode,
+        otherDetails: shipping.otherDetails,
+        phone: shipping.phone,
+        deliveryMethod: deliveryMethod
+      }));
+
       setOrderSuccess(result);
       clearCart();
-      setShipping({ name: '', address: '', phone: '' });
     } catch (err) {
       setError(err.message || 'Checkout failed. An item in your cart may have run out of stock.');
     } finally {
       setOrderProcessing(false);
     }
   };
+
+  const deliveryCharge = deliveryMethod === 'delivery' ? 300 : 0;
+  const orderTotal = cartTotal() + deliveryCharge;
 
   if (!user) {
     return (
@@ -118,7 +182,7 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
                     <div style={{ flexGrow: 1 }}>
                       <span className="text-primary" style={{ fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase' }}>{item.category}</span>
                       <h4 style={{ fontSize: '1.05rem', margin: '0.1rem 0 0.25rem' }}>{item.name}</h4>
-                      <span style={{ fontWeight: 600, color: '#fff' }}>${item.price.toFixed(2)}</span>
+                      <span style={{ fontWeight: 600, color: '#fff' }}>Rs. {item.price.toFixed(2)}</span>
                     </div>
 
                     {/* Quantity Controls */}
@@ -145,15 +209,19 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', fontSize: '0.9rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span className="text-muted">Subtotal:</span>
-                  <span>${cartTotal().toFixed(2)}</span>
+                  <span>Rs. {cartTotal().toFixed(2)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span className="text-muted">Shipping:</span>
-                  <span style={{ color: 'var(--success)' }}>Free</span>
+                  <span className="text-muted">Delivery Charge:</span>
+                  {deliveryMethod === 'delivery' ? (
+                    <span style={{ color: 'var(--primary)' }}>Rs. 300.00</span>
+                  ) : (
+                    <span style={{ color: 'var(--success)' }}>Free</span>
+                  )}
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: 'bold', color: '#fff', marginTop: '0.5rem' }}>
                   <span>Total Amount:</span>
-                  <span style={{ color: 'var(--primary)' }}>${cartTotal().toFixed(2)}</span>
+                  <span style={{ color: 'var(--primary)' }}>Rs. {orderTotal.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -202,17 +270,64 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
                 </div>
 
                 {deliveryMethod === 'delivery' ? (
-                  <div className="form-group">
-                    <label className="form-label">Delivery Address</label>
-                    <input
-                      type="text"
-                      required
-                      className="form-input"
-                      value={shipping.address}
-                      onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
-                      placeholder="Street Address, City"
-                    />
-                  </div>
+                  <>
+                    <div className="form-group">
+                      <label className="form-label">Street Address</label>
+                      <input
+                        type="text"
+                        required
+                        className="form-input"
+                        value={shipping.street}
+                        onChange={(e) => setShipping({ ...shipping, street: e.target.value })}
+                        placeholder="123 Main Street"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">City</label>
+                      <input
+                        type="text"
+                        required
+                        className="form-input"
+                        value={shipping.city}
+                        onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
+                        placeholder="Colombo"
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">State / Region</label>
+                        <input
+                          type="text"
+                          required
+                          className="form-input"
+                          value={shipping.state}
+                          onChange={(e) => setShipping({ ...shipping, state: e.target.value })}
+                          placeholder="Western"
+                        />
+                      </div>
+                      <div className="form-group" style={{ flex: 1 }}>
+                        <label className="form-label">Postal Code</label>
+                        <input
+                          type="text"
+                          required
+                          className="form-input"
+                          value={shipping.postalCode}
+                          onChange={(e) => setShipping({ ...shipping, postalCode: e.target.value })}
+                          placeholder="00100"
+                        />
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Additional Directions (Optional)</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={shipping.otherDetails}
+                        onChange={(e) => setShipping({ ...shipping, otherDetails: e.target.value })}
+                        placeholder="Near clock tower, 2nd floor"
+                      />
+                    </div>
+                  </>
                 ) : (
                   <div className="form-group">
                     <label className="form-label">Collection Location</label>
@@ -238,9 +353,8 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
                     required
                     className="form-input"
                     value={shipping.phone}
-                    onChange={(e) => setShipping({ ...shipping, phone: e.target.value })}
+                    onChange={handlePhoneChange}
                     placeholder="0771234567"
-                    maxLength={15}
                   />
                 </div>
 

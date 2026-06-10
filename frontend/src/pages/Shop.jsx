@@ -174,7 +174,7 @@ const Shop = ({ user, cart = [], addToCart }) => {
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>${product.price.toFixed(2)}</span>
+                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>Rs. {product.price.toFixed(2)}</span>
                   <span style={{ fontSize: '0.75rem', color: product.stock > 0 ? 'var(--success)' : 'var(--error)' }}>
                     {product.stock > 0 ? `In Stock: ${product.stock}` : 'Out of Stock'}
                   </span>
@@ -220,7 +220,7 @@ const Shop = ({ user, cart = [], addToCart }) => {
                     </div>
                     <div>
                       <span className="text-muted" style={{ fontSize: '0.8rem', display: 'block' }}>TOTAL AMOUNT</span>
-                      <span style={{ fontSize: '1.1rem', color: 'var(--primary)', fontWeight: 'bold' }}>${order.totalAmount.toFixed(2)}</span>
+                      <span style={{ fontSize: '1.1rem', color: 'var(--primary)', fontWeight: 'bold' }}>Rs. {order.totalAmount.toFixed(2)}</span>
                     </div>
                     <div>
                       <span className="text-muted" style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.25rem' }}>STATUS</span>
@@ -237,7 +237,7 @@ const Shop = ({ user, cart = [], addToCart }) => {
                       {order.items.map((item, idx) => (
                         <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: '#fff' }}>
                           <span>{item.name} <span style={{ color: 'var(--text-muted)' }}>x{item.quantity}</span></span>
-                          <span>${(item.price * item.quantity).toFixed(2)}</span>
+                          <span>Rs. {(item.price * item.quantity).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>

@@ -105,7 +105,7 @@ const Navbar = ({ user, onLogout, cart = [], cartTotal }) => {
                             <img src={item.image} alt={item.name} />
                             <div className="item-info">
                               <h5>{item.name}</h5>
-                              <span className="item-price">${item.price.toFixed(2)} x {item.quantity}</span>
+                              <span className="item-price">Rs. {item.price.toFixed(2)} x {item.quantity}</span>
                             </div>
                           </div>
                         ))}
@@ -116,7 +116,7 @@ const Navbar = ({ user, onLogout, cart = [], cartTotal }) => {
                     <div className="dropdown-footer">
                       <div className="dropdown-total">
                         <span>Total:</span>
-                        <strong>${cartTotal().toFixed(2)}</strong>
+                        <strong>Rs. {cartTotal().toFixed(2)}</strong>
                       </div>
                       <Link to="/cart" className="btn btn-primary" style={{ width: '100%', fontSize: '0.85rem', padding: '0.5rem' }}>
                         View Cart & Checkout
