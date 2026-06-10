@@ -1,7 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
-import { Calendar, Dumbbell, ShoppingBag, Activity, Trash2, CheckCircle2, ShieldAlert, Truck, Check } from 'lucide-react';
+import { 
+  Calendar, 
+  Dumbbell, 
+  ShoppingBag, 
+  Activity, 
+  Trash2, 
+  ShieldAlert, 
+  Truck, 
+  Check, 
+  Edit, 
+  Plus, 
+  X, 
+  Package,
+  CheckCircle2
+} from 'lucide-react';
 
 const AdminDashboard = ({ user, onLoginSuccess }) => {
   const navigate = useNavigate();
@@ -13,6 +27,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
   const [gymMembers, setGymMembers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [physios, setPhysios] = useState([]);
+  const [products, setProducts] = useState([]);
   const [error, setError] = useState('');
 
   // Admin login states
@@ -20,6 +35,30 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
   const [adminPassword, setAdminPassword] = useState('');
   const [loginSubmitting, setLoginSubmitting] = useState(false);
   const [loginError, setLoginError] = useState('');
+
+  // Supplement Modal state
+  const [productModalOpen, setProductModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null); // null = Add, object = Edit
+  const [productForm, setProductForm] = useState({
+    name: '',
+    description: '',
+    price: '',
+    image: '',
+    category: 'protein',
+    stock: ''
+  });
+
+  // Gym Member Modal state
+  const [gymModalOpen, setGymModalOpen] = useState(false);
+  const [editingGymMember, setEditingGymMember] = useState(null);
+  const [gymForm, setGymForm] = useState({
+    tier: 'Monthly',
+    price: '',
+    startDate: '',
+    endDate: '',
+    paymentStatus: 'Paid',
+    status: 'Active'
+  });
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -55,7 +94,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
     setLoading(true);
     setError('');
     try {
-      // Fetch bookings (court & physio are separated)
+      // Fetch bookings
       const allBookings = await api.bookings.getByDate('');
       const courtBookings = allBookings.filter(b => b.type !== 'physio');
       setBookings(courtBookings);
@@ -71,6 +110,10 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
       // Fetch physiotherapy requests
       const clinicalConsults = await api.physio.getAll();
       setPhysios(clinicalConsults);
+
+      // Fetch store products
+      const storeProducts = await api.products.getAll();
+      setProducts(storeProducts);
     } catch (err) {
       setError('Failed to fetch administration logs. Please check server authorization.');
       console.error(err);
@@ -90,17 +133,51 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
     }
   };
 
-  // 2. Gym membership state update
-  const handleUpdateGymStatus = async (id, status, paymentStatus) => {
+  // 2. Gym member edit & delete
+  const handleOpenEditGym = (member) => {
+    setEditingGymMember(member);
+    setGymForm({
+      tier: member.tier,
+      price: member.price,
+      startDate: member.startDate,
+      endDate: member.endDate,
+      paymentStatus: member.paymentStatus,
+      status: member.status
+    });
+    setGymModalOpen(true);
+  };
+
+  const handleSaveGymMember = async (e) => {
+    e.preventDefault();
+    if (!editingGymMember) return;
     try {
-      const updated = await api.gym.updateStatus(id, { status, paymentStatus });
-      setGymMembers(gymMembers.map(m => m.id === id ? updated : m));
+      const updated = await api.gym.updateStatus(editingGymMember.id, {
+        tier: gymForm.tier,
+        price: parseFloat(gymForm.price),
+        startDate: gymForm.startDate,
+        endDate: gymForm.endDate,
+        paymentStatus: gymForm.paymentStatus,
+        status: gymForm.status
+      });
+      setGymMembers(gymMembers.map(m => m.id === editingGymMember.id ? updated : m));
+      setGymModalOpen(false);
+      setEditingGymMember(null);
     } catch (err) {
-      alert(err.message || 'Update failed.');
+      alert(err.message || 'Failed to update membership details.');
     }
   };
 
-  // 3. E-commerce order shipping status update
+  const handleDeleteGymMember = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this gym membership registration?')) return;
+    try {
+      await api.gym.delete(id);
+      setGymMembers(gymMembers.filter(m => m.id !== id));
+    } catch (err) {
+      alert(err.message || 'Failed to delete membership.');
+    }
+  };
+
+  // 3. E-commerce order updates
   const handleUpdateOrderStatus = async (id, orderStatus) => {
     try {
       const updated = await api.orders.updateStatus(id, { orderStatus });
@@ -110,13 +187,90 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
     }
   };
 
-  // 4. Physiotherapy booking state update
+  const handleDeleteOrder = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this order?')) return;
+    try {
+      await api.orders.delete(id);
+      setOrders(orders.filter(o => o.id !== id));
+    } catch (err) {
+      alert(err.message || 'Failed to delete order.');
+    }
+  };
+
+  // 4. Physiotherapy updates
   const handleUpdatePhysioStatus = async (id, status) => {
     try {
       const updated = await api.physio.updateStatus(id, { status });
       setPhysios(physios.map(p => p.id === id ? updated : p));
     } catch (err) {
       alert(err.message || 'Status update failed.');
+    }
+  };
+
+  // 5. Products CRUD handlers
+  const handleOpenAddProduct = () => {
+    setEditingProduct(null);
+    setProductForm({
+      name: '',
+      description: '',
+      price: '',
+      image: '',
+      category: 'protein',
+      stock: ''
+    });
+    setProductModalOpen(true);
+  };
+
+  const handleOpenEditProduct = (product) => {
+    setEditingProduct(product);
+    setProductForm({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      image: product.image,
+      category: product.category,
+      stock: product.stock
+    });
+    setProductModalOpen(true);
+  };
+
+  const handleSaveProduct = async (e) => {
+    e.preventDefault();
+    if (!productForm.name || !productForm.price || !productForm.category || productForm.stock === '') return;
+
+    try {
+      const payload = {
+        name: productForm.name,
+        description: productForm.description,
+        price: parseFloat(productForm.price),
+        image: productForm.image,
+        category: productForm.category,
+        stock: parseInt(productForm.stock)
+      };
+
+      if (editingProduct) {
+        // Edit Mode
+        const updated = await api.products.update(editingProduct.id, payload);
+        setProducts(products.map(p => p.id === editingProduct.id ? updated : p));
+      } else {
+        // Add Mode
+        const newProduct = await api.products.create(payload);
+        setProducts([...products, newProduct]);
+      }
+      setProductModalOpen(false);
+      setEditingProduct(null);
+    } catch (err) {
+      alert(err.message || 'Failed to save product.');
+    }
+  };
+
+  const handleDeleteProduct = async (id) => {
+    if (!window.confirm('Are you sure you want to remove this product from the storefront catalog?')) return;
+    try {
+      await api.products.delete(id);
+      setProducts(products.filter(p => p.id !== id));
+    } catch (err) {
+      alert(err.message || 'Failed to delete product.');
     }
   };
 
@@ -165,9 +319,9 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                 type="email"
                 required
                 className="form-input"
-                placeholder="admin@kdnsport.com"
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
+                placeholder="admin@kdnsport.com"
               />
             </div>
 
@@ -177,9 +331,9 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                 type="password"
                 required
                 className="form-input"
-                placeholder="••••••••"
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
+                placeholder="••••••••"
               />
             </div>
 
@@ -242,6 +396,14 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
           Store Orders ({orders.length})
         </button>
         <button
+          onClick={() => setActiveTab('products')}
+          className={`btn ${activeTab === 'products' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}
+        >
+          <Package size={16} />
+          Manage Supplements ({products.length})
+        </button>
+        <button
           onClick={() => setActiveTab('physio')}
           className={`btn ${activeTab === 'physio' ? 'btn-primary' : 'btn-secondary'}`}
           style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}
@@ -253,7 +415,8 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
 
       {/* Tab Panels */}
       <div className="card" style={{ backgroundColor: '#141416', padding: '2rem' }}>
-        {/* 1. Court Bookings Panel */}
+        
+        {/* Tab 1: Court Bookings */}
         {activeTab === 'bookings' && (
           <div>
             <h3 style={{ fontFamily: 'Outfit', fontSize: '1.3rem', marginBottom: '1.25rem' }}>Badminton Court Bookings</h3>
@@ -289,7 +452,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                         <td>
                           <button
                             onClick={() => handleCancelBooking(b.id)}
-                            className="btn btn-secondary animate-fade-in"
+                            className="btn btn-secondary"
                             style={{ padding: '0.35rem 0.6rem', fontSize: '0.75rem', color: 'var(--error)' }}
                           >
                             <Trash2 size={12} style={{ marginRight: '4px' }} />
@@ -305,7 +468,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
           </div>
         )}
 
-        {/* 2. Gym Members Panel */}
+        {/* Tab 2: Gym Members */}
         {activeTab === 'gym' && (
           <div>
             <h3 style={{ fontFamily: 'Outfit', fontSize: '1.3rem', marginBottom: '1.25rem' }}>Gym Registrations</h3>
@@ -345,24 +508,23 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                           </span>
                         </td>
                         <td>
-                          <div style={{ display: 'flex', gap: '0.25rem' }}>
-                            {m.status !== 'Active' ? (
-                              <button
-                                onClick={() => handleUpdateGymStatus(m.id, 'Active', 'Paid')}
-                                className="btn btn-secondary"
-                                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', color: 'var(--success)' }}
-                              >
-                                Activate
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleUpdateGymStatus(m.id, 'Expired', m.paymentStatus)}
-                                className="btn btn-secondary"
-                                style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', color: 'var(--error)' }}
-                              >
-                                Suspend
-                              </button>
-                            )}
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={() => handleOpenEditGym(m)}
+                              className="btn btn-secondary"
+                              style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', color: 'var(--primary)' }}
+                            >
+                              <Edit size={12} style={{ marginRight: '4px' }} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteGymMember(m.id)}
+                              className="btn btn-secondary"
+                              style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', color: 'var(--error)' }}
+                            >
+                              <Trash2 size={12} style={{ marginRight: '4px' }} />
+                              Delete
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -374,7 +536,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
           </div>
         )}
 
-        {/* 3. Supplement Orders Panel */}
+        {/* Tab 3: Store Orders */}
         {activeTab === 'orders' && (
           <div>
             <h3 style={{ fontFamily: 'Outfit', fontSize: '1.3rem', marginBottom: '1.25rem' }}>E-Commerce Store Orders</h3>
@@ -397,6 +559,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Fulfillment Status:</span>
                         <span className={`badge ${
                           order.orderStatus === 'Pending' ? 'badge-pending' :
+                          order.orderStatus === 'Approved' ? 'badge-success' :
                           order.orderStatus === 'Shipped' ? 'badge-info' : 'badge-success'
                         }`}>{order.orderStatus}</span>
                       </div>
@@ -420,6 +583,26 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
 
                       <div style={{ display: 'flex', gap: '0.5rem' }}>
                         {order.orderStatus === 'Pending' && (
+                          <>
+                            <button
+                              onClick={() => handleUpdateOrderStatus(order.id, 'Approved')}
+                              className="btn btn-secondary"
+                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: 'var(--success)' }}
+                            >
+                              <CheckCircle2 size={14} style={{ marginRight: '4px' }} />
+                              Accept Order
+                            </button>
+                            <button
+                              onClick={() => handleDeleteOrder(order.id)}
+                              className="btn btn-secondary"
+                              style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: 'var(--error)' }}
+                            >
+                              <Trash2 size={14} style={{ marginRight: '4px' }} />
+                              Cancel/Delete
+                            </button>
+                          </>
+                        )}
+                        {order.orderStatus === 'Approved' && (
                           <button
                             onClick={() => handleUpdateOrderStatus(order.id, 'Shipped')}
                             className="btn btn-secondary"
@@ -439,6 +622,16 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                             Deliver
                           </button>
                         )}
+                        {order.orderStatus === 'Delivered' && (
+                          <button
+                            onClick={() => handleDeleteOrder(order.id)}
+                            className="btn btn-secondary"
+                            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', color: 'var(--error)' }}
+                          >
+                            <Trash2 size={14} style={{ marginRight: '4px' }} />
+                            Remove Record
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -448,7 +641,78 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
           </div>
         )}
 
-        {/* 4. Physiotherapy Consults Panel */}
+        {/* Tab 4: Manage Supplements */}
+        {activeTab === 'products' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontFamily: 'Outfit', fontSize: '1.3rem' }}>Supplement Store Catalog</h3>
+              <button onClick={handleOpenAddProduct} className="btn btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>
+                <Plus size={16} />
+                Add New Supplement
+              </button>
+            </div>
+
+            {products.length === 0 ? (
+              <p className="text-muted">No products found in catalog.</p>
+            ) : (
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Image</th>
+                      <th>Product Name</th>
+                      <th>Category</th>
+                      <th>Price</th>
+                      <th>Stock Level</th>
+                      <th>Rating</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {products.map(p => (
+                      <tr key={p.id}>
+                        <td>
+                          <img src={p.image} alt={p.name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)' }} />
+                        </td>
+                        <td style={{ fontWeight: 600 }}>{p.name}</td>
+                        <td><span className="badge badge-info" style={{ textTransform: 'capitalize' }}>{p.category}</span></td>
+                        <td><strong>${p.price.toFixed(2)}</strong></td>
+                        <td>
+                          <span style={{ color: p.stock > 10 ? 'var(--success)' : p.stock > 0 ? 'var(--warning)' : 'var(--error)', fontWeight: 600 }}>
+                            {p.stock} units
+                          </span>
+                        </td>
+                        <td>★ {p.rating.toFixed(1)}</td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button
+                              onClick={() => handleOpenEditProduct(p)}
+                              className="btn btn-secondary"
+                              style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', color: 'var(--primary)' }}
+                            >
+                              <Edit size={12} style={{ marginRight: '4px' }} />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProduct(p.id)}
+                              className="btn btn-secondary"
+                              style={{ padding: '0.35rem 0.5rem', fontSize: '0.75rem', color: 'var(--error)' }}
+                            >
+                              <Trash2 size={12} style={{ marginRight: '4px' }} />
+                              Remove
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 5: Physio Consults */}
         {activeTab === 'physio' && (
           <div>
             <h3 style={{ fontFamily: 'Outfit', fontSize: '1.3rem', marginBottom: '1.25rem' }}>Physiotherapy consultation slots</h3>
@@ -527,6 +791,253 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
           </div>
         )}
       </div>
+
+      {/* MODAL 1: ADD/EDIT SUPPLEMENT PRODUCT */}
+      {productModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div className="card card-accent animate-fade-in" style={{ maxWidth: '480px', width: '100%', padding: '2rem', backgroundColor: '#141416' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontFamily: 'Outfit', fontSize: '1.4rem' }}>
+                {editingProduct ? 'Edit Supplement Info' : 'Add New Supplement'}
+              </h3>
+              <button onClick={() => setProductModalOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProduct}>
+              <div className="form-group">
+                <label className="form-label">Supplement Name</label>
+                <input
+                  type="text"
+                  required
+                  className="form-input"
+                  placeholder="e.g. KDN Premium Whey Gold"
+                  value={productForm.name}
+                  onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Price ($ USD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    className="form-input"
+                    placeholder="59.99"
+                    value={productForm.price}
+                    onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Category</label>
+                  <select
+                    className="form-input"
+                    value={productForm.category}
+                    onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                  >
+                    <option value="protein">Protein</option>
+                    <option value="pre-workout">Pre-Workout</option>
+                    <option value="creatine">Creatine</option>
+                    <option value="recovery">Recovery</option>
+                    <option value="vitamins">Vitamins</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Stock Units</label>
+                  <input
+                    type="number"
+                    required
+                    className="form-input"
+                    placeholder="25"
+                    value={productForm.stock}
+                    onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Image URL</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Image URL"
+                    value={productForm.image}
+                    onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label">Supplement Description</label>
+                <textarea
+                  rows="3"
+                  className="form-input"
+                  placeholder="Explain benefits, serving size, flavor..."
+                  value={productForm.description}
+                  onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                  style={{ resize: 'none', fontFamily: 'inherit' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setProductModalOpen(false)}
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ flex: 1 }}
+                >
+                  Save Supplement
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: EDIT GYM MEMBER REGISTRATION */}
+      {gymModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div className="card card-accent animate-fade-in" style={{ maxWidth: '480px', width: '100%', padding: '2rem', backgroundColor: '#141416' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontFamily: 'Outfit', fontSize: '1.4rem' }}>
+                Edit Gym Membership Details
+              </h3>
+              <button onClick={() => setGymModalOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveGymMember}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Tier Plan</label>
+                  <select
+                    className="form-input"
+                    value={gymForm.tier}
+                    onChange={(e) => setGymForm({ ...gymForm, tier: e.target.value })}
+                  >
+                    <option value="Monthly">Monthly</option>
+                    <option value="Quarterly">Quarterly</option>
+                    <option value="Annual">Annual</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Plan Price ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    required
+                    className="form-input"
+                    value={gymForm.price}
+                    onChange={(e) => setGymForm({ ...gymForm, price: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Start Date</label>
+                  <input
+                    type="date"
+                    required
+                    className="form-input"
+                    value={gymForm.startDate}
+                    onChange={(e) => setGymForm({ ...gymForm, startDate: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Expiration Date</label>
+                  <input
+                    type="date"
+                    required
+                    className="form-input"
+                    value={gymForm.endDate}
+                    onChange={(e) => setGymForm({ ...gymForm, endDate: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Billing Status</label>
+                  <select
+                    className="form-input"
+                    value={gymForm.paymentStatus}
+                    onChange={(e) => setGymForm({ ...gymForm, paymentStatus: e.target.value })}
+                  >
+                    <option value="Paid">Paid</option>
+                    <option value="Pending">Pending</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Access Card Status</label>
+                  <select
+                    className="form-input"
+                    value={gymForm.status}
+                    onChange={(e) => setGymForm({ ...gymForm, status: e.target.value })}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Expired">Expired</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setGymModalOpen(false)}
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ flex: 1 }}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

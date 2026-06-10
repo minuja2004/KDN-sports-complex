@@ -52,6 +52,32 @@ router.post('/', verifyAdmin, async (req, res) => {
   }
 });
 
+// PUT /api/products/:id - Admin: Edit product details
+router.put('/:id', verifyAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { name, description, price, image, category, stock } = req.body;
+
+  try {
+    const product = await Products.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const updated = await Products.findByIdAndUpdate(id, {
+      name: name || product.name,
+      description: description !== undefined ? description : product.description,
+      price: price !== undefined ? parseFloat(price) : product.price,
+      image: image || product.image,
+      category: category || product.category,
+      stock: stock !== undefined ? parseInt(stock) : product.stock
+    });
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating product', error: err.message });
+  }
+});
+
 // DELETE /api/products/:id - Admin: Delete product listing
 router.delete('/:id', verifyAdmin, async (req, res) => {
   const { id } = req.params;

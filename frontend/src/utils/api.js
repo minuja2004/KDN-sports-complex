@@ -91,6 +91,9 @@ export const api = {
     updateStatus: (id, statusData) => request(`/gym/member/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify(statusData)
+    }),
+    delete: (id) => request(`/gym/member/${id}`, {
+      method: 'DELETE'
     })
   },
 
@@ -100,6 +103,10 @@ export const api = {
     getDetails: (id) => request(`/products/${id}`),
     create: (productData) => request('/products', {
       method: 'POST',
+      body: JSON.stringify(productData)
+    }),
+    update: (id, productData) => request(`/products/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(productData)
     }),
     delete: (id) => request(`/products/${id}`, {
@@ -118,6 +125,9 @@ export const api = {
     updateStatus: (id, statusData) => request(`/orders/${id}/status`, {
       method: 'PUT',
       body: JSON.stringify(statusData)
+    }),
+    delete: (id) => request(`/orders/${id}`, {
+      method: 'DELETE'
     })
   },
 

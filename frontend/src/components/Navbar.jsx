@@ -26,35 +26,39 @@ const Navbar = ({ user, onLogout }) => {
         </Link>
 
         <ul className="nav-links">
-          <li>
-            <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link to="/gym" className={`nav-link ${isActive('/gym') ? 'active' : ''}`}>
-              <Dumbbell size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-              Gym
-            </Link>
-          </li>
-          <li>
-            <Link to="/badminton" className={`nav-link ${isActive('/badminton') ? 'active' : ''}`}>
-              <Calendar size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-              Badminton
-            </Link>
-          </li>
-          <li>
-            <Link to="/physio" className={`nav-link ${isActive('/physio') ? 'active' : ''}`}>
-              <Activity size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-              Physiotherapy
-            </Link>
-          </li>
-          <li>
-            <Link to="/shop" className={`nav-link ${isActive('/shop') ? 'active' : ''}`}>
-              <ShoppingBag size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-              Shop
-            </Link>
-          </li>
+          {(!user || user.role !== 'admin') && (
+            <>
+              <li>
+                <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link to="/gym" className={`nav-link ${isActive('/gym') ? 'active' : ''}`}>
+                  <Dumbbell size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+                  Gym
+                </Link>
+              </li>
+              <li>
+                <Link to="/badminton" className={`nav-link ${isActive('/badminton') ? 'active' : ''}`}>
+                  <Calendar size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+                  Badminton
+                </Link>
+              </li>
+              <li>
+                <Link to="/physio" className={`nav-link ${isActive('/physio') ? 'active' : ''}`}>
+                  <Activity size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+                  Physiotherapy
+                </Link>
+              </li>
+              <li>
+                <Link to="/shop" className={`nav-link ${isActive('/shop') ? 'active' : ''}`}>
+                  <ShoppingBag size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
+                  Shop
+                </Link>
+              </li>
+            </>
+          )}
 
           {user && user.role === 'admin' && (
             <li>

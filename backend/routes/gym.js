@@ -78,10 +78,10 @@ router.post('/register', verifyToken, async (req, res) => {
   }
 });
 
-// PUT /api/gym/member/:id/status - Admin: update payment/status
+// PUT /api/gym/member/:id/status - Admin: update payment/status/details
 router.put('/member/:id/status', verifyAdmin, async (req, res) => {
   const { id } = req.params;
-  const { paymentStatus, status } = req.body;
+  const { paymentStatus, status, tier, price, startDate, endDate } = req.body;
   
   try {
     const member = await GymMembers.findById(id);
@@ -91,12 +91,32 @@ router.put('/member/:id/status', verifyAdmin, async (req, res) => {
 
     const updated = await GymMembers.findByIdAndUpdate(id, {
       paymentStatus: paymentStatus || member.paymentStatus,
-      status: status || member.status
+      status: status || member.status,
+      tier: tier || member.tier,
+      price: price !== undefined ? parseFloat(price) : member.price,
+      startDate: startDate || member.startDate,
+      endDate: endDate || member.endDate
     });
 
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ message: 'Error updating membership status', error: err.message });
+    res.status(500).json({ message: 'Error updating membership details', error: err.message });
+  }
+});
+
+// DELETE /api/gym/member/:id - Admin: Delete gym member registration
+router.delete('/member/:id', verifyAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const member = await GymMembers.findById(id);
+    if (!member) {
+      return res.status(404).json({ message: 'Gym member not found' });
+    }
+    
+    await GymMembers.deleteOne({ id });
+    res.json({ message: 'Gym member deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting gym member', error: err.message });
   }
 });
 
