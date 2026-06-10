@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Dumbbell, Calendar, Activity, ShoppingBag, Lock, LogIn, LogOut, LayoutDashboard } from 'lucide-react';
 
-const Navbar = ({ user, onLogout }) => {
+const Navbar = ({ user, onLogout, cart = [], cartTotal }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [cartHovered, setCartHovered] = useState(false);
 
   const handleLogoutClick = () => {
     onLogout();
@@ -66,6 +67,64 @@ const Navbar = ({ user, onLogout }) => {
                 <LayoutDashboard size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
                 Admin Panel
               </Link>
+            </li>
+          )}
+
+          {user && user.role !== 'admin' && (
+            <li 
+              className="nav-cart-li" 
+              style={{ position: 'relative', display: 'flex', alignItems: 'center' }}
+              onMouseEnter={() => setCartHovered(true)}
+              onMouseLeave={() => setCartHovered(false)}
+            >
+              <Link 
+                to="/cart" 
+                className={`nav-link ${isActive('/cart') ? 'active' : ''}`}
+                style={{ position: 'relative', display: 'flex', alignItems: 'center', padding: '0.4rem', borderRadius: '4px' }}
+              >
+                <ShoppingBag size={18} style={{ color: isActive('/cart') ? 'var(--primary)' : 'var(--text-muted)' }} />
+                {cart.length > 0 && (
+                  <span className="cart-badge">
+                    {cart.reduce((sum, item) => sum + item.quantity, 0)}
+                  </span>
+                )}
+              </Link>
+
+              {cartHovered && (
+                <div className="nav-cart-dropdown">
+                  <div className="dropdown-header">
+                    <h4>Shopping Cart</h4>
+                  </div>
+                  <div className="dropdown-body">
+                    {cart.length === 0 ? (
+                      <p className="dropdown-empty">Your cart is empty.</p>
+                    ) : (
+                      <div className="dropdown-items-list">
+                        {cart.map(item => (
+                          <div key={item.id} className="dropdown-item">
+                            <img src={item.image} alt={item.name} />
+                            <div className="item-info">
+                              <h5>{item.name}</h5>
+                              <span className="item-price">${item.price.toFixed(2)} x {item.quantity}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {cart.length > 0 && (
+                    <div className="dropdown-footer">
+                      <div className="dropdown-total">
+                        <span>Total:</span>
+                        <strong>${cartTotal().toFixed(2)}</strong>
+                      </div>
+                      <Link to="/cart" className="btn btn-primary" style={{ width: '100%', fontSize: '0.85rem', padding: '0.5rem' }}>
+                        View Cart & Checkout
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
             </li>
           )}
 

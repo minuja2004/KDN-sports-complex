@@ -1,0 +1,207 @@
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ShoppingCart, ShoppingBag, X, CreditCard, ChevronRight, CheckCircle, ArrowLeft } from 'lucide-react';
+import { api } from '../utils/api';
+
+const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
+  const navigate = useNavigate();
+  const [shipping, setShipping] = useState({ name: '', address: '', phone: '' });
+  const [orderProcessing, setOrderProcessing] = useState(false);
+  const [orderSuccess, setOrderSuccess] = useState(null);
+  const [error, setError] = useState('');
+
+  const handleCheckoutSubmit = async (e) => {
+    e.preventDefault();
+    if (!shipping.name || !shipping.address || !shipping.phone) {
+      setError('Please complete all shipping details.');
+      return;
+    }
+
+    setOrderProcessing(true);
+    setError('');
+
+    try {
+      const orderPayload = {
+        items: cart,
+        shippingDetails: shipping,
+        totalAmount: cartTotal()
+      };
+
+      const result = await api.orders.create(orderPayload);
+      setOrderSuccess(result);
+      clearCart();
+      setShipping({ name: '', address: '', phone: '' });
+    } catch (err) {
+      setError(err.message || 'Checkout failed. An item in your cart may have run out of stock.');
+    } finally {
+      setOrderProcessing(false);
+    }
+  };
+
+  if (!user) {
+    return (
+      <div className="container section text-center animate-fade-in" style={{ padding: '6rem 0' }}>
+        <div className="card" style={{ maxWidth: '500px', margin: '0 auto', padding: '3rem', backgroundColor: '#141416' }}>
+          <ShoppingBag size={48} style={{ color: 'var(--primary)', marginBottom: '1.5rem' }} />
+          <h2>Access Denied</h2>
+          <p className="text-muted" style={{ marginBottom: '2rem' }}>Please sign in to view your shopping cart.</p>
+          <Link to="/login" className="btn btn-primary">Sign In Now</Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container section animate-fade-in">
+      <div style={{ marginBottom: '2rem' }}>
+        <Link to="/shop" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.9rem' }} className="nav-link">
+          <ArrowLeft size={16} />
+          Back to Shop
+        </Link>
+      </div>
+
+      <div style={{ marginBottom: '3rem' }}>
+        <h1 style={{ fontFamily: 'Outfit', fontSize: '2.5rem', marginBottom: '0.5rem' }}>
+          YOUR <span style={{ color: 'var(--primary)' }}>SHOPPING CART</span>
+        </h1>
+        <p className="text-muted">Review your items and complete your purchase order.</p>
+      </div>
+
+      {orderSuccess ? (
+        <div className="card text-center" style={{ padding: '3rem', backgroundColor: '#141416', maxWidth: '600px', margin: '0 auto' }}>
+          <CheckCircle size={56} style={{ color: 'var(--success)', marginBottom: '1.5rem' }} />
+          <h2 style={{ marginBottom: '1rem' }}>Order Placed Successfully!</h2>
+          <p className="text-muted" style={{ marginBottom: '1.5rem', fontSize: '0.95rem', lineHeight: '1.6' }}>
+            Thank you for your purchase! Your order ID is <strong style={{ color: '#fff' }}>#{orderSuccess.id}</strong>.
+            The sports complex administration has received your request and will ship your order soon.
+          </p>
+          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+            <Link to="/shop" className="btn btn-primary">Continue Shopping</Link>
+          </div>
+        </div>
+      ) : cart.length === 0 ? (
+        <div className="card text-center" style={{ padding: '4rem', backgroundColor: '#141416' }}>
+          <ShoppingBag size={56} style={{ color: 'var(--border-highlight)', marginBottom: '1.5rem' }} />
+          <h3>Your Cart is Empty</h3>
+          <p className="text-muted" style={{ marginBottom: '2rem' }}>You haven't added any athletic supplements to your cart yet.</p>
+          <Link to="/shop" className="btn btn-primary">Browse Shop</Link>
+        </div>
+      ) : (
+        <div className="grid-3" style={{ alignItems: 'start', gap: '2.5rem' }}>
+          {/* Cart Items List - takes 2/3 space */}
+          <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div className="card" style={{ backgroundColor: '#141416', padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+                Cart Items ({cart.reduce((sum, item) => sum + item.quantity, 0)})
+              </h3>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                {cart.map(item => (
+                  <div key={item.id} style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', borderBottom: '1px solid #1f1f23', paddingBottom: '1.5rem' }}>
+                    <img src={item.image} alt={item.name} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border)' }} />
+                    <div style={{ flexGrow: 1 }}>
+                      <span className="text-primary" style={{ fontSize: '0.7rem', fontWeight: 'bold', textTransform: 'uppercase' }}>{item.category}</span>
+                      <h4 style={{ fontSize: '1.05rem', margin: '0.1rem 0 0.25rem' }}>{item.name}</h4>
+                      <span style={{ fontWeight: 600, color: '#fff' }}>${item.price.toFixed(2)}</span>
+                    </div>
+
+                    {/* Quantity Controls */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', backgroundColor: 'var(--bg-surface-elevated)', borderRadius: '6px', padding: '0.4rem 0.6rem', border: '1px solid var(--border)' }}>
+                      <button type="button" onClick={() => updateQuantity(item.id, -1)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.1rem', cursor: 'pointer', width: '20px' }}>-</button>
+                      <span style={{ fontSize: '0.95rem', width: '20px', textAlign: 'center', fontWeight: 'bold' }}>{item.quantity}</span>
+                      <button type="button" onClick={() => updateQuantity(item.id, 1)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.1rem', cursor: 'pointer', width: '20px' }}>+</button>
+                    </div>
+
+                    <button type="button" onClick={() => updateQuantity(item.id, -item.quantity)} style={{ background: 'none', border: 'none', color: 'var(--error)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <X size={18} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Checkout & Summary Form - takes 1/3 space */}
+          <div>
+            <div className="card card-accent" style={{ backgroundColor: '#141416', position: 'sticky', top: '90px' }}>
+              <h3 style={{ fontSize: '1.2rem', marginBottom: '1.5rem' }}>Order Summary</h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', fontSize: '0.9rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-muted">Subtotal:</span>
+                  <span>${cartTotal().toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span className="text-muted">Shipping:</span>
+                  <span style={{ color: 'var(--success)' }}>Free</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.1rem', fontWeight: 'bold', color: '#fff', marginTop: '0.5rem' }}>
+                  <span>Total Amount:</span>
+                  <span style={{ color: 'var(--primary)' }}>${cartTotal().toFixed(2)}</span>
+                </div>
+              </div>
+
+              {error && (
+                <div style={{ color: 'var(--error)', fontSize: '0.85rem', marginBottom: '1rem', textAlign: 'center' }}>
+                  {error}
+                </div>
+              )}
+
+              <form onSubmit={handleCheckoutSubmit}>
+                <h4 style={{ fontSize: '0.95rem', marginBottom: '1rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Shipping details</h4>
+                
+                <div className="form-group">
+                  <label className="form-label">Recipient Name</label>
+                  <input
+                    type="text"
+                    required
+                    className="form-input"
+                    value={shipping.name}
+                    onChange={(e) => setShipping({ ...shipping, name: e.target.value })}
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Delivery Address</label>
+                  <input
+                    type="text"
+                    required
+                    className="form-input"
+                    value={shipping.address}
+                    onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
+                    placeholder="Street Address, City"
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                  <label className="form-label">Contact Phone</label>
+                  <input
+                    type="tel"
+                    required
+                    className="form-input"
+                    value={shipping.phone}
+                    onChange={(e) => setShipping({ ...shipping, phone: e.target.value })}
+                    placeholder="+94 77 123 4567"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  style={{ width: '100%' }}
+                  disabled={orderProcessing}
+                >
+                  <CreditCard size={16} />
+                  {orderProcessing ? 'Securing Stock...' : 'Confirm & Place Order'}
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Cart;

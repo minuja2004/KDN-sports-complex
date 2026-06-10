@@ -3,23 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { ShoppingCart, ShoppingBag, Search, Filter, X, CreditCard, ChevronRight, CheckCircle, Package } from 'lucide-react';
 
-const Shop = ({ user }) => {
+const Shop = ({ user, cart = [], addToCart }) => {
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   
-  // E-commerce state
-  const [cart, setCart] = useState([]);
-  const [cartOpen, setCartOpen] = useState(false);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [shipping, setShipping] = useState({ name: '', address: '', phone: '' });
-  const [orderProcessing, setOrderProcessing] = useState(false);
-  
   const [orderSuccess, setOrderSuccess] = useState(null);
   const [myOrders, setMyOrders] = useState([]);
-  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchProducts();
@@ -49,98 +41,6 @@ const Shop = ({ user }) => {
     }
   };
 
-  // Add item to cart
-  const addToCart = (product) => {
-    if (!user) {
-      alert('Please sign in to add items to your shopping cart.');
-      navigate('/login');
-      return;
-    }
-
-    if (product.stock <= 0) {
-      alert('Sorry, this product is currently out of stock.');
-      return;
-    }
-
-    const existing = cart.find(item => item.id === product.id);
-    if (existing) {
-      if (existing.quantity >= product.stock) {
-        alert(`Sorry, only ${product.stock} units are available in stock.`);
-        return;
-      }
-      setCart(cart.map(item => 
-        item.id === product.id 
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
-    } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
-    }
-    setCartOpen(true);
-  };
-
-  // Modify cart quantity
-  const updateQuantity = (id, delta) => {
-    const item = cart.find(c => c.id === id);
-    const newQty = item.quantity + delta;
-    
-    if (newQty <= 0) {
-      setCart(cart.filter(c => c.id !== id));
-      return;
-    }
-
-    if (newQty > item.stock) {
-      alert(`Sorry, only ${item.stock} units are available in stock.`);
-      return;
-    }
-
-    setCart(cart.map(c => c.id === id ? { ...c, quantity: newQty } : c));
-  };
-
-  // Calculate cart total
-  const cartTotal = () => {
-    return cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  };
-
-  // Trigger Checkout
-  const handleOpenCheckout = () => {
-    if (cart.length === 0) return;
-    setCartOpen(false);
-    setCheckoutOpen(true);
-    setError('');
-  };
-
-  const handleCheckoutSubmit = async (e) => {
-    e.preventDefault();
-    if (!shipping.name || !shipping.address || !shipping.phone) {
-      setError('Please complete all shipping details.');
-      return;
-    }
-
-    setOrderProcessing(true);
-    setError('');
-
-    try {
-      const orderPayload = {
-        items: cart,
-        shippingDetails: shipping,
-        totalAmount: cartTotal()
-      };
-
-      const result = await api.orders.create(orderPayload);
-      setOrderSuccess(result);
-      setCart([]);
-      setCheckoutOpen(false);
-      setShipping({ name: '', address: '', phone: '' });
-      await fetchProducts(); // Reload products to update stocks
-      await fetchUserOrders(); // Reload user order history
-    } catch (err) {
-      setError(err.message || 'Checkout failed. An item in your cart may have run out of stock.');
-    } finally {
-      setOrderProcessing(false);
-    }
-  };
-
   // Filtered Products
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -163,7 +63,7 @@ const Shop = ({ user }) => {
       {/* Cart button floating top-right */}
       {user && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '2rem' }}>
-          <button onClick={() => setCartOpen(true)} className="btn btn-secondary" style={{ position: 'relative', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <button onClick={() => navigate('/cart')} className="btn btn-secondary" style={{ position: 'relative', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <ShoppingCart size={18} style={{ color: 'var(--primary)' }} />
             <span>View Cart</span>
             {cart.length > 0 && (
@@ -295,176 +195,6 @@ const Shop = ({ user }) => {
         </div>
       )}
 
-      {/* Cart Slider Drawer */}
-      {cartOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          width: '100%',
-          maxWidth: '450px',
-          height: '100%',
-          backgroundColor: '#141416',
-          boxShadow: '-10px 0 30px rgba(0,0,0,0.5)',
-          zIndex: 1000,
-          display: 'flex',
-          flexDirection: 'column',
-          borderLeft: '1px solid var(--border)',
-          animation: 'fadeIn 0.2s ease'
-        }}>
-          {/* Header */}
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h3 style={{ fontFamily: 'Outfit', fontSize: '1.3rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <ShoppingCart size={20} style={{ color: 'var(--primary)' }} />
-              Shopping Cart
-            </h3>
-            <button onClick={() => setCartOpen(false)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
-              <X size={20} />
-            </button>
-          </div>
-
-          {/* Items */}
-          <div style={{ flexGrow: 1, overflowY: 'auto', padding: '1.5rem' }}>
-            {cart.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: '4rem' }}>
-                <ShoppingBag size={48} style={{ color: 'var(--border)', marginBottom: '1rem' }} />
-                <p>Your shopping cart is empty.</p>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                {cart.map(item => (
-                  <div key={item.id} style={{ display: 'flex', gap: '1rem', alignItems: 'center', borderBottom: '1px solid #1f1f23', paddingBottom: '1rem' }}>
-                    <img src={item.image} alt={item.name} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
-                    <div style={{ flexGrow: 1 }}>
-                      <h4 style={{ fontSize: '0.9rem', marginBottom: '0.25rem' }}>{item.name}</h4>
-                      <span style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.9rem' }}>${item.price.toFixed(2)}</span>
-                    </div>
-                    {/* Controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--bg-surface-elevated)', borderRadius: '4px', padding: '0.25rem' }}>
-                      <button onClick={() => updateQuantity(item.id, -1)} style={{ background: 'none', border: 'none', color: '#fff', width: '24px', height: '24px', cursor: 'pointer' }}>-</button>
-                      <span style={{ fontSize: '0.85rem', width: '20px', textAlign: 'center' }}>{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, 1)} style={{ background: 'none', border: 'none', color: '#fff', width: '24px', height: '24px', cursor: 'pointer' }}>+</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Footer Checkout action */}
-          <div style={{ padding: '1.5rem', borderTop: '1px solid var(--border)', backgroundColor: 'var(--bg-surface-elevated)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Cart Total:</span>
-              <strong style={{ fontSize: '1.4rem', color: '#fff' }}>${cartTotal().toFixed(2)}</strong>
-            </div>
-
-            <button
-              onClick={handleOpenCheckout}
-              className="btn btn-primary"
-              style={{ width: '100%' }}
-              disabled={cart.length === 0}
-            >
-              Proceed to Checkout
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Checkout Info Modal */}
-      {checkoutOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          backgroundColor: 'rgba(0,0,0,0.8)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 1000,
-          padding: '1rem'
-        }}>
-          <div className="card card-accent animate-fade-in" style={{ maxWidth: '450px', width: '100%', padding: '2rem', backgroundColor: '#141416' }}>
-            <h3 style={{ fontFamily: 'Outfit', fontSize: '1.4rem', marginBottom: '0.5rem' }}>Fulfillment Address</h3>
-            <p className="text-muted" style={{ fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-              Confirm your shipping details to complete payment checkout.
-            </p>
-
-            <div style={{ backgroundColor: 'var(--bg-surface-elevated)', padding: '1rem', borderRadius: '6px', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
-                <span>Order Total:</span>
-                <strong style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>${cartTotal().toFixed(2)}</strong>
-              </div>
-            </div>
-
-            {error && (
-              <div style={{ color: 'var(--error)', fontSize: '0.85rem', marginBottom: '1rem', textAlign: 'center' }}>
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleCheckoutSubmit}>
-              <div className="form-group">
-                <label className="form-label">Recipient Name</label>
-                <input
-                  type="text"
-                  required
-                  className="form-input"
-                  value={shipping.name}
-                  onChange={(e) => setShipping({ ...shipping, name: e.target.value })}
-                  placeholder="John Doe"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Delivery Address</label>
-                <input
-                  type="text"
-                  required
-                  className="form-input"
-                  value={shipping.address}
-                  onChange={(e) => setShipping({ ...shipping, address: e.target.value })}
-                  placeholder="Street Address, City"
-                />
-              </div>
-
-              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                <label className="form-label">Contact Phone</label>
-                <input
-                  type="tel"
-                  required
-                  className="form-input"
-                  value={shipping.phone}
-                  onChange={(e) => setShipping({ ...shipping, phone: e.target.value })}
-                  placeholder="+94 77 123 4567"
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button
-                  type="button"
-                  onClick={() => setCheckoutOpen(false)}
-                  className="btn btn-secondary"
-                  style={{ flex: 1 }}
-                  disabled={orderProcessing}
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  className="btn btn-primary"
-                  style={{ flex: 1 }}
-                  disabled={orderProcessing}
-                >
-                  {orderProcessing ? 'Securing Stock...' : 'Confirm Order'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* User's past Store Orders */}
       {user && (
