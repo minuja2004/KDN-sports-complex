@@ -115,15 +115,27 @@ mongoose.connection.on('connected', async () => {
       }
     }
     
-    // Seed default admin account if empty
-    const adminCount = await MongoUser.countDocuments({ role: 'admin' });
-    if (adminCount === 0) {
-      console.log('Database Mode: Seeding default admin account into MongoDB Atlas...');
-      const fallbackAdmins = jsonDb.Users.find({ role: 'admin' });
-      for (let admin of fallbackAdmins) {
-        await MongoUser.create(admin);
-      }
-      console.log('Database Mode: Default admin synced successfully.');
+    // Guarantee admin@kdnsport.com exists with password 'admin123'
+    const bcrypt = require('bcryptjs');
+    const hashedPassword = bcrypt.hashSync('admin123', 10);
+    const adminEmail = 'admin@kdnsport.com';
+    
+    const existingAdmin = await MongoUser.findOne({ email: adminEmail });
+    if (existingAdmin) {
+      console.log('Database Mode: Synchronizing/Resetting admin password to "admin123"...');
+      await MongoUser.updateOne({ email: adminEmail }, { $set: { password: hashedPassword } });
+      console.log('Database Mode: Admin credentials updated.');
+    } else {
+      console.log('Database Mode: Admin account not found. Seeding admin@kdnsport.com...');
+      const id = Math.random().toString(36).substr(2, 9);
+      await MongoUser.create({
+        id,
+        username: 'admin',
+        email: adminEmail,
+        password: hashedPassword,
+        role: 'admin'
+      });
+      console.log('Database Mode: Admin seeded successfully.');
     }
   } catch (err) {
     console.error('Database Mode: Seeding error:', err.message);
