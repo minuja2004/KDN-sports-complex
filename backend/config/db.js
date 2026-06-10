@@ -6,15 +6,12 @@ const MONGO_URI = process.env.MONGO_URI;
 let dbType = 'json';
 
 if (MONGO_URI) {
-  try {
-    // Connect to MongoDB Atlas (we encode special characters like @ automatically if they were not encoded by the user, but we'll try to connect directly first)
-    mongoose.connect(MONGO_URI);
-    console.log('Database Mode: Initializing connection to MongoDB Atlas...');
-    dbType = 'mongodb';
-  } catch (err) {
-    console.error('Mongoose connection setup failed. Falling back to local database.', err.message);
+  console.log('Database Mode: Initializing connection to MongoDB Atlas...');
+  dbType = 'mongodb';
+  mongoose.connect(MONGO_URI).catch(err => {
+    console.error('Database Mode: Mongoose connection setup failed. Falling back to local database.', err.message);
     dbType = 'json';
-  }
+  });
 }
 
 // Define Schemas
