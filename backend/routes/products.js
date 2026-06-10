@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Products } = require('../config/db');
 const { verifyAdmin } = require('../middleware/auth');
+const cloudinary = require('../config/cloudinary');
 
 // GET /api/products - Get all supplements catalog
 router.get('/', async (req, res) => {
@@ -36,11 +37,23 @@ router.post('/', verifyAdmin, async (req, res) => {
   }
 
   try {
+    let imageUrl = image || 'https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=500&auto=format&fit=crop&q=60';
+
+    // Intercept base64 and upload to Cloudinary if configured
+    if (imageUrl && imageUrl.startsWith('data:image/')) {
+      if (cloudinary.isConfigured) {
+        const uploadedUrl = await cloudinary.uploadImage(imageUrl);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        }
+      }
+    }
+
     const newProduct = await Products.create({
       name,
       description: description || '',
       price: parseFloat(price),
-      image: image || 'https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=500&auto=format&fit=crop&q=60',
+      image: imageUrl,
       category,
       stock: parseInt(stock),
       rating: 5.0
@@ -63,11 +76,23 @@ router.put('/:id', verifyAdmin, async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
+    let imageUrl = image;
+
+    // Intercept base64 and upload to Cloudinary if configured
+    if (imageUrl && imageUrl.startsWith('data:image/')) {
+      if (cloudinary.isConfigured) {
+        const uploadedUrl = await cloudinary.uploadImage(imageUrl);
+        if (uploadedUrl) {
+          imageUrl = uploadedUrl;
+        }
+      }
+    }
+
     const updated = await Products.findByIdAndUpdate(id, {
       name: name || product.name,
       description: description !== undefined ? description : product.description,
       price: price !== undefined ? parseFloat(price) : product.price,
-      image: image || product.image,
+      image: imageUrl || product.image,
       category: category || product.category,
       stock: stock !== undefined ? parseInt(stock) : product.stock
     });
