@@ -14,7 +14,8 @@ app.use(cors({
 }));
 
 // Parsing requests
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Apply Site Shutdown Control Middleware globally
 app.use(shutdownMiddleware);
