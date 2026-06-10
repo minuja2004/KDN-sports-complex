@@ -28,9 +28,9 @@ const verifySecretAdminToken = (req, res, next) => {
 };
 
 // GET /api/secret/status - Check if site is currently shut down (Public)
-router.get('/status', (req, res) => {
+router.get('/status', async (req, res) => {
   try {
-    const config = SystemConfig.get();
+    const config = await SystemConfig.get();
     res.json({ isShutdown: config.isShutdown });
   } catch (err) {
     res.status(500).json({ isShutdown: false });
@@ -55,7 +55,7 @@ router.post('/request-otp', async (req, res) => {
   expiry.setMinutes(expiry.getMinutes() + 5); // 5 minute expiry
 
   // Store in SystemConfig
-  SystemConfig.set({
+  await SystemConfig.set({
     secretAdminOtp: otp,
     otpExpiry: expiry.toISOString()
   });
@@ -113,7 +113,7 @@ router.post('/request-otp', async (req, res) => {
 });
 
 // POST /api/secret/verify-otp - Validate code and login
-router.post('/verify-otp', (req, res) => {
+router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
 
   if (!email || !otp) {
@@ -121,7 +121,7 @@ router.post('/verify-otp', (req, res) => {
   }
 
   try {
-    const config = SystemConfig.get();
+    const config = await SystemConfig.get();
 
     if (email.toLowerCase() !== SECRET_ADMIN_EMAIL.toLowerCase()) {
       return res.status(403).json({ message: 'Access Denied.' });
@@ -137,7 +137,7 @@ router.post('/verify-otp', (req, res) => {
     }
 
     // Success: Clear OTP credentials
-    SystemConfig.set({
+    await SystemConfig.set({
       secretAdminOtp: null,
       otpExpiry: null
     });
@@ -160,7 +160,7 @@ router.post('/verify-otp', (req, res) => {
 });
 
 // POST /api/secret/toggle-shutdown - Turn site on/off (Requires Secret Admin Token)
-router.post('/toggle-shutdown', verifySecretAdminToken, (req, res) => {
+router.post('/toggle-shutdown', verifySecretAdminToken, async (req, res) => {
   const { shutdown } = req.body;
 
   if (shutdown === undefined) {
@@ -168,10 +168,9 @@ router.post('/toggle-shutdown', verifySecretAdminToken, (req, res) => {
   }
 
   try {
-    const currentConfig = SystemConfig.get();
     const isOffline = shutdown === true;
 
-    SystemConfig.set({
+    await SystemConfig.set({
       isShutdown: isOffline
     });
 

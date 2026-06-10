@@ -4,9 +4,9 @@ const { Orders, Products } = require('../config/db');
 const { verifyToken, verifyAdmin } = require('../middleware/auth');
 
 // GET /api/orders/my-orders - Get logged-in user's orders
-router.get('/my-orders', verifyToken, (req, res) => {
+router.get('/my-orders', verifyToken, async (req, res) => {
   try {
-    const userOrders = Orders.find({ userId: req.user.id });
+    const userOrders = await Orders.find({ userId: req.user.id });
     res.json(userOrders);
   } catch (err) {
     res.status(500).json({ message: 'Error retrieving your orders', error: err.message });
@@ -14,9 +14,9 @@ router.get('/my-orders', verifyToken, (req, res) => {
 });
 
 // GET /api/orders/all - Admin: view all store orders
-router.get('/all', verifyAdmin, (req, res) => {
+router.get('/all', verifyAdmin, async (req, res) => {
   try {
-    const list = Orders.find();
+    const list = await Orders.find();
     res.json(list);
   } catch (err) {
     res.status(500).json({ message: 'Error retrieving orders list', error: err.message });
@@ -24,7 +24,7 @@ router.get('/all', verifyAdmin, (req, res) => {
 });
 
 // POST /api/orders - Checkout a cart (requires login)
-router.post('/', verifyToken, (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   const { items, shippingDetails, totalAmount } = req.body;
 
   if (!items || !items.length || !shippingDetails || !totalAmount) {
@@ -36,7 +36,7 @@ router.post('/', verifyToken, (req, res) => {
     
     // First pass: validate stock for all items
     for (const item of items) {
-      const product = Products.findById(item.id);
+      const product = await Products.findById(item.id);
       if (!product) {
         return res.status(404).json({ message: `Product "${item.name}" not found.` });
       }
@@ -54,14 +54,14 @@ router.post('/', verifyToken, (req, res) => {
 
     // Second pass: deduct stock
     for (const item of items) {
-      const product = Products.findById(item.id);
-      Products.findByIdAndUpdate(product.id, {
+      const product = await Products.findById(item.id);
+      await Products.findByIdAndUpdate(product.id, {
         stock: product.stock - item.quantity
       });
     }
 
     // Create order record
-    const newOrder = Orders.create({
+    const newOrder = await Orders.create({
       userId: req.user.id,
       userName: req.user.username,
       userEmail: req.user.email,
@@ -79,17 +79,17 @@ router.post('/', verifyToken, (req, res) => {
 });
 
 // PUT /api/orders/:id/status - Admin: update order shipping/fulfillment status
-router.put('/:id/status', verifyAdmin, (req, res) => {
+router.put('/:id/status', verifyAdmin, async (req, res) => {
   const { id } = req.params;
   const { orderStatus, paymentStatus } = req.body;
 
   try {
-    const order = Orders.findById(id);
+    const order = await Orders.findById(id);
     if (!order) {
       return res.status(404).json({ message: 'Order not found' });
     }
 
-    const updated = Orders.findByIdAndUpdate(id, {
+    const updated = await Orders.findByIdAndUpdate(id, {
       orderStatus: orderStatus || order.orderStatus,
       paymentStatus: paymentStatus || order.paymentStatus
     });

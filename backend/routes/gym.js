@@ -4,9 +4,9 @@ const { GymMembers } = require('../config/db');
 const { verifyToken, verifyAdmin } = require('../middleware/auth');
 
 // GET /api/gym/member - Get active gym membership details for logged-in user
-router.get('/member', verifyToken, (req, res) => {
+router.get('/member', verifyToken, async (req, res) => {
   try {
-    const member = GymMembers.findOne({ userId: req.user.id });
+    const member = await GymMembers.findOne({ userId: req.user.id });
     if (!member) {
       return res.status(404).json({ message: 'No gym membership found for this user.' });
     }
@@ -17,9 +17,9 @@ router.get('/member', verifyToken, (req, res) => {
 });
 
 // GET /api/gym/all - Admin: view all registered gym members
-router.get('/all', verifyAdmin, (req, res) => {
+router.get('/all', verifyAdmin, async (req, res) => {
   try {
-    const list = GymMembers.find();
+    const list = await GymMembers.find();
     res.json(list);
   } catch (err) {
     res.status(500).json({ message: 'Error retrieving gym members list', error: err.message });
@@ -27,7 +27,7 @@ router.get('/all', verifyAdmin, (req, res) => {
 });
 
 // POST /api/gym/register - Register gym membership
-router.post('/register', verifyToken, (req, res) => {
+router.post('/register', verifyToken, async (req, res) => {
   const { tier, price, paymentStatus } = req.body;
 
   if (!tier || !price) {
@@ -36,7 +36,7 @@ router.post('/register', verifyToken, (req, res) => {
 
   try {
     // Check if user already has gym membership
-    const existing = GymMembers.findOne({ userId: req.user.id });
+    const existing = await GymMembers.findOne({ userId: req.user.id });
     
     const startDate = new Date();
     const endDate = new Date();
@@ -66,10 +66,10 @@ router.post('/register', verifyToken, (req, res) => {
     let result;
     if (existing) {
       // Renew or update existing membership
-      result = GymMembers.findByIdAndUpdate(existing.id, membershipData);
+      result = await GymMembers.findByIdAndUpdate(existing.id, membershipData);
     } else {
       // Create new membership
-      result = GymMembers.create(membershipData);
+      result = await GymMembers.create(membershipData);
     }
 
     res.status(201).json(result);
@@ -79,17 +79,17 @@ router.post('/register', verifyToken, (req, res) => {
 });
 
 // PUT /api/gym/member/:id/status - Admin: update payment/status
-router.put('/member/:id/status', verifyAdmin, (req, res) => {
+router.put('/member/:id/status', verifyAdmin, async (req, res) => {
   const { id } = req.params;
   const { paymentStatus, status } = req.body;
   
   try {
-    const member = GymMembers.findById(id);
+    const member = await GymMembers.findById(id);
     if (!member) {
       return res.status(404).json({ message: 'Gym member not found' });
     }
 
-    const updated = GymMembers.findByIdAndUpdate(id, {
+    const updated = await GymMembers.findByIdAndUpdate(id, {
       paymentStatus: paymentStatus || member.paymentStatus,
       status: status || member.status
     });

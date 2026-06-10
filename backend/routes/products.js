@@ -4,9 +4,9 @@ const { Products } = require('../config/db');
 const { verifyAdmin } = require('../middleware/auth');
 
 // GET /api/products - Get all supplements catalog
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    const list = Products.find();
+    const list = await Products.find();
     res.json(list);
   } catch (err) {
     res.status(500).json({ message: 'Error retrieving products', error: err.message });
@@ -14,10 +14,10 @@ router.get('/', (req, res) => {
 });
 
 // GET /api/products/:id - Get specific product details
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const product = Products.findById(id);
+    const product = await Products.findById(id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
@@ -28,7 +28,7 @@ router.get('/:id', (req, res) => {
 });
 
 // POST /api/products - Admin: Create new product listing
-router.post('/', verifyAdmin, (req, res) => {
+router.post('/', verifyAdmin, async (req, res) => {
   const { name, description, price, image, category, stock } = req.body;
 
   if (!name || !price || !category || stock === undefined) {
@@ -36,7 +36,7 @@ router.post('/', verifyAdmin, (req, res) => {
   }
 
   try {
-    const newProduct = Products.create({
+    const newProduct = await Products.create({
       name,
       description: description || '',
       price: parseFloat(price),
@@ -53,15 +53,15 @@ router.post('/', verifyAdmin, (req, res) => {
 });
 
 // DELETE /api/products/:id - Admin: Delete product listing
-router.delete('/:id', verifyAdmin, (req, res) => {
+router.delete('/:id', verifyAdmin, async (req, res) => {
   const { id } = req.params;
   try {
-    const product = Products.findById(id);
+    const product = await Products.findById(id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
     
-    Products.deleteOne({ id });
+    await Products.deleteOne({ id });
     res.json({ message: 'Product deleted successfully' });
   } catch (err) {
     res.status(500).json({ message: 'Error deleting product', error: err.message });

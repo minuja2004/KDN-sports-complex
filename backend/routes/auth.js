@@ -8,31 +8,31 @@ const { verifyToken } = require('../middleware/auth');
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_kdn_jwt_token_key_12345';
 
 // POST /api/auth/register - Register a new user
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
   const { username, email, password, role } = req.body;
 
   if (!username || !email || !password) {
     return res.status(400).json({ message: 'All fields are required' });
   }
 
-  // Check if user already exists
-  const existingUser = Users.findOne({ email });
-  if (existingUser) {
-    return res.status(400).json({ message: 'User with this email already exists' });
-  }
-
-  // Hash password
-  const hashedPassword = bcrypt.hashSync(password, 10);
-
-  // Set default role as customer if not specified or admin if registration has code
-  let finalRole = 'customer';
-  if (role === 'admin') {
-    finalRole = 'admin';
-  }
-
-  // Save user
   try {
-    const newUser = Users.create({
+    // Check if user already exists
+    const existingUser = await Users.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User with this email already exists' });
+    }
+
+    // Hash password
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
+    // Set default role as customer if not specified or admin if registration has code
+    let finalRole = 'customer';
+    if (role === 'admin') {
+      finalRole = 'admin';
+    }
+
+    // Save user
+    const newUser = await Users.create({
       username,
       email,
       password: hashedPassword,
@@ -61,7 +61,7 @@ router.post('/register', (req, res) => {
 });
 
 // POST /api/auth/login - User login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -69,7 +69,7 @@ router.post('/login', (req, res) => {
   }
 
   try {
-    const user = Users.findOne({ email });
+    const user = await Users.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
@@ -101,9 +101,9 @@ router.post('/login', (req, res) => {
 });
 
 // GET /api/auth/profile - Get current user profile
-router.get('/profile', verifyToken, (req, res) => {
+router.get('/profile', verifyToken, async (req, res) => {
   try {
-    const user = Users.findById(req.user.id);
+    const user = await Users.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
