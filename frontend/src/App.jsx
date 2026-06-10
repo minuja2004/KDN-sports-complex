@@ -82,7 +82,7 @@ const AppContent = ({ user, onLogin, onLogout }) => {
           />
           <Route 
             path="/admin" 
-            element={user && user.role === 'admin' ? <AdminDashboard user={user} /> : <Navigate to="/login" />} 
+            element={<AdminDashboard user={user} onLoginSuccess={onLogin} />} 
           />
           <Route path="/secret-gatekeeper" element={<SecretGatekeeper />} />
           <Route path="*" element={<Navigate to="/" />} />

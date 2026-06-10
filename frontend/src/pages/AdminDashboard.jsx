@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { Calendar, Dumbbell, ShoppingBag, Activity, Trash2, CheckCircle2, ShieldAlert, Truck, Check } from 'lucide-react';
 
-const AdminDashboard = ({ user }) => {
+const AdminDashboard = ({ user, onLoginSuccess }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('bookings');
   const [loading, setLoading] = useState(true);
@@ -15,13 +15,41 @@ const AdminDashboard = ({ user }) => {
   const [physios, setPhysios] = useState([]);
   const [error, setError] = useState('');
 
+  // Admin login states
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [loginSubmitting, setLoginSubmitting] = useState(false);
+  const [loginError, setLoginError] = useState('');
+
   useEffect(() => {
     if (!user || user.role !== 'admin') {
-      navigate('/login');
+      setLoading(false);
       return;
     }
     fetchDashboardData();
   }, [user]);
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setLoginError('');
+    setLoginSubmitting(true);
+    try {
+      const result = await api.auth.login(adminEmail, adminPassword);
+      if (result.user.role !== 'admin') {
+        setLoginError('Access Denied: This panel is restricted to administrative staff only.');
+        setLoginSubmitting(false);
+        return;
+      }
+      localStorage.setItem('kdn_token', result.token);
+      if (onLoginSuccess) {
+        onLoginSuccess(result.user);
+      }
+    } catch (err) {
+      setLoginError(err.message || 'Authentication failed. Please verify management credentials.');
+    } finally {
+      setLoginSubmitting(false);
+    }
+  };
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -96,6 +124,70 @@ const AdminDashboard = ({ user }) => {
     return (
       <div className="container section text-center">
         <p className="text-muted">Loading administrative records dashboard...</p>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'admin') {
+    return (
+      <div className="container section animate-fade-in" style={{ display: 'flex', justifyContent: 'center', minHeight: '60vh', alignItems: 'center' }}>
+        <div className="card card-accent" style={{ maxWidth: '400px', width: '100%', padding: '2.5rem', backgroundColor: '#141416' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <div style={{
+              display: 'inline-flex',
+              padding: '1rem',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(240, 129, 25, 0.08)',
+              border: '1px dashed var(--primary)',
+              color: 'var(--primary)',
+              marginBottom: '1rem'
+            }}>
+              <ShieldAlert size={36} />
+            </div>
+            <h2 style={{ fontFamily: 'Outfit', fontSize: '1.8rem', letterSpacing: '-0.02em' }}>
+              ADMIN PORTAL
+            </h2>
+            <p className="text-muted" style={{ fontSize: '0.85rem' }}>
+              Management Sign In for KDN Sport Complex
+            </p>
+          </div>
+
+          {loginError && (
+            <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--error)', padding: '0.75rem', borderRadius: '6px', color: '#f87171', fontSize: '0.85rem', marginBottom: '1.5rem', textAlign: 'center' }}>
+              {loginError}
+            </div>
+          )}
+
+          <form onSubmit={handleAdminLogin}>
+            <div className="form-group">
+              <label className="form-label">Admin Email</label>
+              <input
+                type="email"
+                required
+                className="form-input"
+                placeholder="admin@kdnsport.com"
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '2rem' }}>
+              <label className="form-label">Password</label>
+              <input
+                type="password"
+                required
+                className="form-input"
+                placeholder="••••••••"
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+              />
+            </div>
+
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={loginSubmitting}>
+              {loginSubmitting ? 'Verifying Credentials...' : 'Sign In as Admin'}
+            </button>
+          </form>
+        </div>
       </div>
     );
   }

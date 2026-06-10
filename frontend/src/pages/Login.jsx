@@ -166,7 +166,7 @@ const Login = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: isRegister ? '1.25rem' : '2rem' }}>
+          <div className="form-group" style={{ marginBottom: '2rem' }}>
             <label className="form-label">Password</label>
             <div style={{ position: 'relative' }}>
               <input
@@ -182,24 +182,6 @@ const Login = ({ onLoginSuccess }) => {
               <Lock size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
             </div>
           </div>
-
-          {isRegister && (
-            <div className="form-group" style={{ marginBottom: '2rem' }}>
-              <label className="form-label">Register User Role</label>
-              <select
-                name="role"
-                className="form-input"
-                value={formData.role}
-                onChange={handleInputChange}
-              >
-                <option value="customer">Customer (Member)</option>
-                <option value="admin">Normal Admin (Management)</option>
-              </select>
-              <span className="text-muted" style={{ fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
-                * Standard admins can manage bookings, gym logs, physio, and store orders.
-              </span>
-            </div>
-          )}
 
           <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={submitting}>
             {isRegister ? <UserPlus size={16} /> : <LogIn size={16} />}
