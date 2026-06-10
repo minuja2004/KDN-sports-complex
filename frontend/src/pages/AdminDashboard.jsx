@@ -234,6 +234,22 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
     setProductModalOpen(true);
   };
 
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Selected file is too large. Please select an image under 2MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setProductForm(prev => ({ ...prev, image: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSaveProduct = async (e) => {
     e.preventDefault();
     if (!productForm.name || !productForm.price || !productForm.category || productForm.stock === '') return;
@@ -872,16 +888,27 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Image URL</label>
+                  <label className="form-label">Upload Product Image</label>
                   <input
-                    type="text"
+                    type="file"
+                    accept="image/*"
                     className="form-input"
-                    placeholder="Image URL"
-                    value={productForm.image}
-                    onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                    onChange={handleImageUpload}
+                    style={{ padding: '0.45rem 0.8rem' }}
                   />
                 </div>
               </div>
+
+              {productForm.image && (
+                <div style={{ marginBottom: '1.25rem', textAlign: 'center' }}>
+                  <span className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.35rem' }}>Selected Image:</span>
+                  <img
+                    src={productForm.image}
+                    alt="Preview"
+                    style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border)' }}
+                  />
+                </div>
+              )}
 
               <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                 <label className="form-label">Supplement Description</label>
