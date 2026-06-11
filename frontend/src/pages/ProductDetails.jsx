@@ -13,10 +13,14 @@ const ProductDetails = ({ user, addToCart }) => {
   const [quantity, setQuantity] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [addedSuccessProductId, setAddedSuccessProductId] = useState(null);
+  const [activeImage, setActiveImage] = useState(null);
 
   useEffect(() => {
+    setActiveImage(null);
     fetchProductDetails();
   }, [id]);
+
+  const displayImage = activeImage || (product ? (product.images && product.images[0]) || product.image : '');
 
   const fetchProductDetails = async () => {
     setLoading(true);
@@ -118,20 +122,64 @@ const ProductDetails = ({ user, addToCart }) => {
             borderRadius: '12px'
           }}></div>
           
-          <img
-            src={product.image}
+           <img
+            src={displayImage}
             alt={product.name}
             style={{
               width: '100%',
-              maxHeight: '480px',
+              height: '420px',
               objectFit: 'cover',
               borderRadius: '8px',
               border: '2px solid var(--border-highlight)',
               boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
               position: 'relative',
-              zIndex: 1
+              zIndex: 1,
+              transition: 'all 0.3s ease'
             }}
           />
+
+          {/* Thumbnails gallery */}
+          {product.images && product.images.length > 0 && (
+            <div style={{ 
+              display: 'flex', 
+              gap: '10px', 
+              marginTop: '1.25rem', 
+              justifyContent: 'center', 
+              position: 'relative', 
+              zIndex: 2,
+              flexWrap: 'wrap'
+            }}>
+              {product.images.map((img, idx) => {
+                const isActive = img === displayImage;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveImage(img)}
+                    onMouseEnter={() => setActiveImage(img)}
+                    style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '6px',
+                      overflow: 'hidden',
+                      border: isActive ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      boxShadow: isActive ? '0 0 10px var(--primary-glow)' : 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                      backgroundColor: 'transparent',
+                      transition: 'transform 0.2s, border-color 0.2s'
+                    }}
+                  >
+                    <img
+                      src={img}
+                      alt={`${product.name} thumbnail ${idx}`}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Right Column: Details & Actions */}
@@ -294,11 +342,20 @@ const ProductDetails = ({ user, addToCart }) => {
                 }}
               >
                 <div>
-                  <img
-                    src={p.image}
-                    alt={p.name}
-                    style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '6px', marginBottom: '1rem', border: '1px solid var(--border)' }}
-                  />
+                  <div className="product-image-wrapper" style={{ height: '180px' }}>
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="main-image"
+                    />
+                    {p.images && p.images.length > 1 && (
+                      <img
+                        src={p.images[1]}
+                        alt={p.name}
+                        className="hover-image"
+                      />
+                    )}
+                  </div>
                   
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.5rem' }}>
                     <span className="text-primary" style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>

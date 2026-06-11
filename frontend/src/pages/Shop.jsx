@@ -172,11 +172,20 @@ const Shop = ({ user, cart = [], addToCart }) => {
               onClick={() => navigate(`/shop/product/${product.id}`)}
             >
               <div>
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '6px', marginBottom: '1rem', border: '1px solid var(--border)' }}
-                />
+                <div className="product-image-wrapper">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="main-image"
+                  />
+                  {product.images && product.images.length > 1 && (
+                    <img
+                      src={product.images[1]}
+                      alt={product.name}
+                      className="hover-image"
+                    />
+                  )}
+                </div>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.5rem' }}>
                   <span className="text-primary" style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>

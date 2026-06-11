@@ -31,6 +31,10 @@ const initDbFile = () => {
           description: 'High-quality micro-filtered whey protein isolate with 25g protein per serving. Perfect for post-workout muscle recovery.',
           price: 16497.00,
           image: 'https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=500&auto=format&fit=crop&q=60',
+          images: [
+            'https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=500&auto=format&fit=crop&q=60',
+            'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&auto=format&fit=crop&q=60'
+          ],
           category: 'protein',
           stock: 45,
           rating: 4.8,
@@ -42,6 +46,10 @@ const initDbFile = () => {
           description: 'High-energy pump formula with Beta-Alanine, L-Citrulline, and Caffeine to boost workout performance and focus.',
           price: 10497.00,
           image: 'https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=500&auto=format&fit=crop&q=60',
+          images: [
+            'https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=500&auto=format&fit=crop&q=60',
+            'https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=500&auto=format&fit=crop&q=60'
+          ],
           category: 'pre-workout',
           stock: 30,
           rating: 4.6,
@@ -53,6 +61,10 @@ const initDbFile = () => {
           description: '100% pure micronized creatine monohydrate. Promotes explosive strength, power, and muscle mass.',
           price: 7497.00,
           image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&auto=format&fit=crop&q=60',
+          images: [
+            'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&auto=format&fit=crop&q=60',
+            'https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=500&auto=format&fit=crop&q=60'
+          ],
           category: 'creatine',
           stock: 100,
           rating: 4.9,
@@ -64,6 +76,10 @@ const initDbFile = () => {
           description: 'Branched-chain amino acids in a 2:1:1 ratio. Aids in intra-workout hydration, endurance, and reduces muscle soreness.',
           price: 8997.00,
           image: 'https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=500&auto=format&fit=crop&q=60',
+          images: [
+            'https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=500&auto=format&fit=crop&q=60',
+            'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=500&auto=format&fit=crop&q=60'
+          ],
           category: 'recovery',
           stock: 40,
           rating: 4.5,
@@ -75,6 +91,10 @@ const initDbFile = () => {
           description: 'Advanced joint recovery complex containing Glucosamine, Chondroitin, and MSM. Ideal for heavy lifters and athletes.',
           price: 5997.00,
           image: 'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=500&auto=format&fit=crop&q=60',
+          images: [
+            'https://images.unsplash.com/photo-1584017911766-d451b3d0e843?w=500&auto=format&fit=crop&q=60',
+            'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?w=500&auto=format&fit=crop&q=60'
+          ],
           category: 'vitamins',
           stock: 25,
           rating: 4.7,

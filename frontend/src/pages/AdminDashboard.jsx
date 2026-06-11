@@ -44,6 +44,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
     description: '',
     price: '',
     image: '',
+    images: [],
     category: 'protein',
     stock: '',
     allowKoko: true
@@ -216,6 +217,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
       description: '',
       price: '',
       image: '',
+      images: [],
       category: 'protein',
       stock: '',
       allowKoko: true
@@ -230,6 +232,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
       description: product.description,
       price: product.price,
       image: product.image,
+      images: product.images || (product.image ? [product.image] : []),
       category: product.category,
       stock: product.stock,
       allowKoko: product.allowKoko !== undefined ? product.allowKoko : true
@@ -238,19 +241,44 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Selected file is too large. Please select an image under 2MB.');
-      return;
-    }
+    const validFiles = files.filter(file => {
+      if (file.size > 2 * 1024 * 1024) {
+        alert(`Selected file "${file.name}" is too large. Please select images under 2MB.`);
+        return false;
+      }
+      return true;
+    });
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setProductForm(prev => ({ ...prev, image: reader.result }));
-    };
-    reader.readAsDataURL(file);
+    if (validFiles.length === 0) return;
+
+    const readPromises = validFiles.map(file => {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve(reader.result);
+        };
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(readPromises).then(base64Images => {
+      setProductForm(prev => {
+        const newImages = [...(prev.images || [])];
+        base64Images.forEach(img => {
+          if (!newImages.includes(img)) {
+            newImages.push(img);
+          }
+        });
+        return {
+          ...prev,
+          images: newImages,
+          image: prev.image || newImages[0] || ''
+        };
+      });
+    });
   };
 
   const handleSaveProduct = async (e) => {
@@ -263,6 +291,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
         description: productForm.description,
         price: parseFloat(productForm.price),
         image: productForm.image,
+        images: productForm.images || [],
         category: productForm.category,
         stock: parseInt(productForm.stock),
         allowKoko: productForm.allowKoko
@@ -868,11 +897,12 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                     onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
                   />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Upload Product Image</label>
+                 <div className="form-group">
+                  <label className="form-label">Upload Product Images</label>
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     className="form-input"
                     onChange={handleImageUpload}
                     style={{ padding: '0.45rem 0.8rem' }}
@@ -897,14 +927,84 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                 </label>
               </div>
 
-              {productForm.image && (
-                <div style={{ marginBottom: '1.25rem', textAlign: 'center' }}>
-                  <span className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.35rem' }}>Selected Image:</span>
-                  <img
-                    src={productForm.image}
-                    alt="Preview"
-                    style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', border: '1px solid var(--border)' }}
-                  />
+               {productForm.images && productForm.images.length > 0 && (
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <span className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.5rem', display: 'block' }}>
+                    Gallery Images (First is Main):
+                  </span>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                    {productForm.images.map((img, idx) => (
+                      <div 
+                        key={idx} 
+                        style={{ 
+                          position: 'relative', 
+                          width: '70px', 
+                          height: '70px', 
+                          borderRadius: '6px', 
+                          overflow: 'hidden', 
+                          border: idx === 0 ? '2px solid var(--primary)' : '1px solid var(--border)',
+                          boxShadow: idx === 0 ? '0 0 8px var(--primary-glow)' : 'none'
+                        }}
+                      >
+                        <img
+                          src={img}
+                          alt={`Preview ${idx}`}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setProductForm(prev => {
+                              const filtered = prev.images.filter((_, i) => i !== idx);
+                              return {
+                                ...prev,
+                                images: filtered,
+                                image: filtered[0] || ''
+                              };
+                            });
+                          }}
+                          style={{
+                            position: 'absolute',
+                            top: '2px',
+                            right: '2px',
+                            backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '18px',
+                            height: '18px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '11px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            padding: 0,
+                            lineHeight: 1
+                          }}
+                          title="Remove image"
+                        >
+                          ×
+                        </button>
+                        {idx === 0 && (
+                          <div style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            backgroundColor: 'var(--primary)',
+                            color: '#fff',
+                            fontSize: '8px',
+                            fontWeight: 'bold',
+                            textAlign: 'center',
+                            padding: '1px 0'
+                          }}>
+                            MAIN
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
