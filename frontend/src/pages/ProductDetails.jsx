@@ -628,7 +628,6 @@ const ProductDetails = ({ user, addToCart }) => {
                     </button>
                   </div>
                 </div>
-                </div>
               </div>
             ))}
           </div>
