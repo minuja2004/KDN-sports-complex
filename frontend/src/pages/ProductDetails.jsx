@@ -7,10 +7,12 @@ const ProductDetails = ({ user, addToCart }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
+  const [suggestedProducts, setSuggestedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [addedSuccess, setAddedSuccess] = useState(false);
+  const [addedSuccessProductId, setAddedSuccessProductId] = useState(null);
 
   useEffect(() => {
     fetchProductDetails();
@@ -22,6 +24,17 @@ const ProductDetails = ({ user, addToCart }) => {
     try {
       const data = await api.products.getDetails(id);
       setProduct(data);
+
+      // Fetch all products to construct related suggestions
+      try {
+        const allProducts = await api.products.getAll();
+        const filtered = allProducts.filter(p => p.id !== id);
+        const sameCategory = filtered.filter(p => p.category === data.category);
+        const otherCategories = filtered.filter(p => p.category !== data.category);
+        setSuggestedProducts([...sameCategory, ...otherCategories].slice(0, 3));
+      } catch (err) {
+        console.error('Failed to fetch suggested products:', err.message);
+      }
     } catch (err) {
       console.error('Failed to load product details:', err.message);
       setError('Product not found or failed to load details.');
@@ -254,6 +267,126 @@ const ProductDetails = ({ user, addToCart }) => {
           </div>
         </div>
       </div>
+
+      {/* Suggested Products Section */}
+      {suggestedProducts.length > 0 && (
+        <div style={{ marginTop: '5rem', borderTop: '1px solid var(--border)', paddingTop: '3rem', zIndex: 1, position: 'relative' }}>
+          <h2 style={{ fontFamily: 'Outfit', fontSize: '1.8rem', marginBottom: '2rem', textAlign: 'center', color: '#fff' }}>
+            SUGGESTED <span style={{ color: 'var(--primary)' }}>SUPPLEMENTS</span>
+          </h2>
+          
+          <div className="grid-3" style={{ marginBottom: '2rem' }}>
+            {suggestedProducts.map(p => (
+              <div 
+                key={p.id} 
+                className="card card-accent" 
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  justifyContent: 'space-between', 
+                  backgroundColor: '#141416',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onClick={() => {
+                  setQuantity(1); // Reset details page quantity
+                  navigate(`/shop/product/${p.id}`);
+                }}
+              >
+                <div>
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '6px', marginBottom: '1rem', border: '1px solid var(--border)' }}
+                  />
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.5rem' }}>
+                    <span className="text-primary" style={{ fontSize: '0.75rem', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                      {p.category.replace('-', ' ')}
+                    </span>
+                    <span style={{ fontSize: '0.8rem', color: '#fbbf24' }}>★ {p.rating.toFixed(1)}</span>
+                  </div>
+
+                  <h3 style={{ fontFamily: 'Outfit', fontSize: '1.1rem', marginBottom: '0.5rem', color: '#fff' }}>{p.name}</h3>
+                  <p className="text-muted" style={{ fontSize: '0.75rem', lineHeight: '1.5', marginBottom: '1.5rem', minHeight: '40px' }}>
+                    {p.description.length > 80 ? p.description.substring(0, 80) + '...' : p.description}
+                  </p>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>රු {p.price.toFixed(2)}</span>
+                    <span style={{ fontSize: '0.75rem', color: p.stock > 0 ? 'var(--success)' : 'var(--error)' }}>
+                      {p.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                    </span>
+                  </div>
+
+                  {p.allowKoko && (
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '4px', 
+                      fontSize: '0.75rem', 
+                      color: '#a0aec0', 
+                      marginTop: '-0.5rem', 
+                      marginBottom: '1rem',
+                      flexWrap: 'wrap'
+                    }}>
+                      <span>or 3 X <strong style={{ color: '#fff' }}>රු {(p.price / 3).toFixed(2)}</strong> with</span>
+                      <svg viewBox="0 0 135 45" width="48" height="15" style={{ verticalAlign: 'middle', marginLeft: '2px', marginRight: '2px' }}>
+                        <defs>
+                          <pattern id={`koko-stripes-${p.id}`} width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                            <rect width="4" height="4" fill="#00D2CA" />
+                            <line x1="0" y1="0" x2="0" y2="4" stroke="#0D1B50" strokeWidth="1.2" />
+                          </pattern>
+                        </defs>
+                        <text x="2" y="37" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill={`url(#koko-stripes-${p.id})`} stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                        <text x="3" y="36" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill={`url(#koko-stripes-${p.id})`} stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                        <text x="4" y="35" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill={`url(#koko-stripes-${p.id})`} stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                        <text x="5" y="34" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="#FFAEC9" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                      </svg>
+                      <span 
+                        style={{ 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          width: '12px', 
+                          height: '12px', 
+                          borderRadius: '50%', 
+                          backgroundColor: '#2d3748', 
+                          color: '#a0aec0', 
+                          fontSize: '8px', 
+                          fontWeight: 'bold', 
+                          cursor: 'help' 
+                        }} 
+                        title="Split your bill into 3 interest-free installments with Koko"
+                      >
+                        i
+                      </span>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const success = addToCart(p);
+                      if (success) {
+                        setAddedSuccessProductId(p.id);
+                        setTimeout(() => setAddedSuccessProductId(null), 1500);
+                      }
+                    }}
+                    className={`btn ${addedSuccessProductId === p.id ? 'btn-success-added' : 'btn-outline'}`}
+                    style={{ width: '100%', padding: '0.45rem', fontSize: '0.85rem' }}
+                    disabled={p.stock <= 0}
+                  >
+                    {addedSuccessProductId === p.id ? 'Added!' : 'Add to Cart'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
