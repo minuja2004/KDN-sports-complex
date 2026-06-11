@@ -42,9 +42,14 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
   });
 
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [orderProcessing, setOrderProcessing] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
   const [error, setError] = useState('');
+
+  const isAddressComplete = deliveryMethod === 'delivery' 
+    ? (shipping.name && shipping.phone && shipping.street && shipping.city && shipping.state && shipping.postalCode && shipping.phone.length === 10)
+    : (shipping.name && shipping.phone && shipping.phone.length === 10);
 
   // Handle phone changes to force numbers-only and cap at 10 digits
   const handlePhoneChange = (e) => {
@@ -128,6 +133,178 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
           <h2>Access Denied</h2>
           <p className="text-muted" style={{ marginBottom: '2rem' }}>Please sign in to view your shopping cart.</p>
           <Link to="/login" className="btn btn-primary">Sign In Now</Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (isEditingAddress) {
+    return (
+      <div className="container section animate-fade-in">
+        <div style={{ marginBottom: '2rem' }}>
+          <button
+            type="button"
+            onClick={() => setIsEditingAddress(false)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
+            className="nav-link"
+          >
+            <ArrowLeft size={16} />
+            Back to Cart Checkout
+          </button>
+        </div>
+
+        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+          <div className="card card-accent" style={{ backgroundColor: '#141416', padding: '2.5rem' }}>
+            <h2 style={{ fontFamily: 'Outfit', fontSize: '1.8rem', marginBottom: '0.5rem' }}>
+              📍 {deliveryMethod === 'delivery' ? 'DELIVERY ADDRESS' : 'PICKUP CONTACT INFO'}
+            </h2>
+            <p className="text-muted" style={{ marginBottom: '2rem', fontSize: '0.9rem' }}>
+              Provide details for order delivery and contact.
+            </p>
+
+            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+              <button
+                type="button"
+                className={`btn ${deliveryMethod === 'delivery' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ flex: 1, padding: '0.6rem', fontSize: '0.85rem' }}
+                onClick={() => setDeliveryMethod('delivery')}
+              >
+                🚚 Delivery
+              </button>
+              <button
+                type="button"
+                className={`btn ${deliveryMethod === 'pickup' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ flex: 1, padding: '0.6rem', fontSize: '0.85rem' }}
+                onClick={() => setDeliveryMethod('pickup')}
+              >
+                🏢 Store Pickup
+              </button>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Recipient Name</label>
+              <input
+                type="text"
+                required
+                className="form-input"
+                value={shipping.name}
+                onChange={(e) => setShipping({ ...shipping, name: e.target.value })}
+                placeholder="John Doe"
+              />
+            </div>
+
+            {deliveryMethod === 'delivery' ? (
+              <>
+                <div className="form-group">
+                  <label className="form-label">Street Address</label>
+                  <input
+                    type="text"
+                    required
+                    className="form-input"
+                    value={shipping.street}
+                    onChange={(e) => setShipping({ ...shipping, street: e.target.value })}
+                    placeholder="123 Main Street"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">City</label>
+                  <input
+                    type="text"
+                    required
+                    className="form-input"
+                    value={shipping.city}
+                    onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
+                    placeholder="Colombo"
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem' }}>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="form-label">State / Region</label>
+                    <input
+                      type="text"
+                      required
+                      className="form-input"
+                      value={shipping.state}
+                      onChange={(e) => setShipping({ ...shipping, state: e.target.value })}
+                      placeholder="Western"
+                    />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label className="form-label">Postal Code</label>
+                    <input
+                      type="text"
+                      required
+                      className="form-input"
+                      value={shipping.postalCode}
+                      onChange={(e) => setShipping({ ...shipping, postalCode: e.target.value })}
+                      placeholder="00100"
+                    />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Additional Directions (Optional)</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={shipping.otherDetails}
+                    onChange={(e) => setShipping({ ...shipping, otherDetails: e.target.value })}
+                    placeholder="Near clock tower, 2nd floor"
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label className="form-label">Collection Location</label>
+                <div style={{
+                  backgroundColor: 'var(--bg-surface-elevated)',
+                  border: '1px solid var(--border)',
+                  padding: '1rem',
+                  borderRadius: '6px',
+                  fontSize: '0.9rem',
+                  color: 'var(--text-muted)',
+                  lineHeight: '1.5'
+                }}>
+                  📍 <strong>KDN Sports Complex Head Office</strong><br/>
+                  123 Complex Boulevard, Colombo
+                </div>
+              </div>
+            )}
+
+            <div className="form-group" style={{ marginBottom: '2.5rem' }}>
+              <label className="form-label">Contact Phone (10 Digits)</label>
+              <input
+                type="tel"
+                required
+                className="form-input"
+                value={shipping.phone}
+                onChange={handlePhoneChange}
+                placeholder="0771234567"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (!shipping.name || !shipping.phone) {
+                  alert('Please complete name and phone number fields.');
+                  return;
+                }
+                if (deliveryMethod === 'delivery' && (!shipping.street || !shipping.city || !shipping.state || !shipping.postalCode)) {
+                  alert('Please complete all address fields.');
+                  return;
+                }
+                if (shipping.phone.length !== 10) {
+                  alert('Contact Phone must be exactly 10 digits.');
+                  return;
+                }
+                setIsEditingAddress(false);
+              }}
+              className="btn btn-primary"
+              style={{ width: '100%', padding: '0.85rem' }}
+            >
+              ✅ Save & Return to Checkout
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -234,131 +411,66 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
               )}
 
               <form onSubmit={handleCheckoutSubmit}>
-                <h4 style={{ fontSize: '0.95rem', marginBottom: '1rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Fulfillment details</h4>
+                <h4 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>Fulfillment details</h4>
                 
-                {/* Delivery Option Selector */}
-                <div className="form-group">
-                  <label className="form-label">Delivery Option</label>
-                  <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                {/* Fulfillment Preview */}
+                <div style={{
+                  backgroundColor: 'var(--bg-surface-elevated)',
+                  border: '1px solid var(--border)',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  marginBottom: '1.5rem',
+                  fontSize: '0.9rem'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <span style={{ fontWeight: 'bold', textTransform: 'uppercase', color: 'var(--primary)', fontSize: '0.8rem' }}>
+                      {deliveryMethod === 'delivery' ? '🚚 Home Delivery' : '🏢 Store Pickup'}
+                    </span>
                     <button
                       type="button"
-                      className={`btn ${deliveryMethod === 'delivery' ? 'btn-primary' : 'btn-secondary'}`}
-                      style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', borderRadius: '4px' }}
-                      onClick={() => setDeliveryMethod('delivery')}
+                      onClick={() => setIsEditingAddress(true)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: 'var(--primary)',
+                        fontSize: '0.8rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        textDecoration: 'underline',
+                        padding: 0
+                      }}
                     >
-                      🚚 Delivery
-                    </button>
-                    <button
-                      type="button"
-                      className={`btn ${deliveryMethod === 'pickup' ? 'btn-primary' : 'btn-secondary'}`}
-                      style={{ flex: 1, padding: '0.5rem', fontSize: '0.8rem', borderRadius: '4px' }}
-                      onClick={() => setDeliveryMethod('pickup')}
-                    >
-                      🏢 Store Pickup
+                      ✏️ Edit Details
                     </button>
                   </div>
+
+                  {isAddressComplete ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', color: 'var(--text-muted)' }}>
+                      <div><strong style={{ color: '#fff' }}>Recipient:</strong> {shipping.name}</div>
+                      {deliveryMethod === 'delivery' ? (
+                        <div><strong style={{ color: '#fff' }}>Address:</strong> {shipping.street}, {shipping.city}, {shipping.state}, {shipping.postalCode}{shipping.otherDetails ? ` (${shipping.otherDetails})` : ''}</div>
+                      ) : (
+                        <div><strong style={{ color: '#fff' }}>Pickup Location:</strong> KDN Head Office, Colombo</div>
+                      )}
+                      <div><strong style={{ color: '#fff' }}>Phone:</strong> {shipping.phone}</div>
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '0.5rem 0', color: 'var(--error)', fontSize: '0.85rem' }}>
+                      ⚠️ Fulfillment info is incomplete.
+                    </div>
+                  )}
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Recipient Name</label>
-                  <input
-                    type="text"
-                    required
-                    className="form-input"
-                    value={shipping.name}
-                    onChange={(e) => setShipping({ ...shipping, name: e.target.value })}
-                    placeholder="John Doe"
-                  />
-                </div>
-
-                {deliveryMethod === 'delivery' ? (
-                  <>
-                    <div className="form-group">
-                      <label className="form-label">Street Address</label>
-                      <input
-                        type="text"
-                        required
-                        className="form-input"
-                        value={shipping.street}
-                        onChange={(e) => setShipping({ ...shipping, street: e.target.value })}
-                        placeholder="123 Main Street"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">City</label>
-                      <input
-                        type="text"
-                        required
-                        className="form-input"
-                        value={shipping.city}
-                        onChange={(e) => setShipping({ ...shipping, city: e.target.value })}
-                        placeholder="Colombo"
-                      />
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <div className="form-group" style={{ flex: 1 }}>
-                        <label className="form-label">State / Region</label>
-                        <input
-                          type="text"
-                          required
-                          className="form-input"
-                          value={shipping.state}
-                          onChange={(e) => setShipping({ ...shipping, state: e.target.value })}
-                          placeholder="Western"
-                        />
-                      </div>
-                      <div className="form-group" style={{ flex: 1 }}>
-                        <label className="form-label">Postal Code</label>
-                        <input
-                          type="text"
-                          required
-                          className="form-input"
-                          value={shipping.postalCode}
-                          onChange={(e) => setShipping({ ...shipping, postalCode: e.target.value })}
-                          placeholder="00100"
-                        />
-                      </div>
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Additional Directions (Optional)</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={shipping.otherDetails}
-                        onChange={(e) => setShipping({ ...shipping, otherDetails: e.target.value })}
-                        placeholder="Near clock tower, 2nd floor"
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <div className="form-group">
-                    <label className="form-label">Collection Location</label>
-                    <div style={{
-                      backgroundColor: 'var(--bg-surface-elevated)',
-                      border: '1px solid var(--border)',
-                      padding: '0.75rem',
-                      borderRadius: '6px',
-                      fontSize: '0.85rem',
-                      color: 'var(--text-muted)',
-                      lineHeight: '1.4'
-                    }}>
-                      📍 <strong>KDN Sports Complex Head Office</strong><br/>
-                      123 Complex Boulevard, Colombo
-                    </div>
-                  </div>
+                {!isAddressComplete && (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingAddress(true)}
+                    className="btn btn-outline"
+                    style={{ width: '100%', marginBottom: '1.5rem', borderStyle: 'dashed', padding: '0.6rem', fontSize: '0.85rem' }}
+                  >
+                    📍 Set Delivery Address
+                  </button>
                 )}
-
-                 <div className="form-group" style={{ marginBottom: '1.5rem' }}>
-                  <label className="form-label">Contact Phone (10 Digits)</label>
-                  <input
-                    type="tel"
-                    required
-                    className="form-input"
-                    value={shipping.phone}
-                    onChange={handlePhoneChange}
-                    placeholder="0771234567"
-                  />
-                </div>
 
                 {/* Payment Method Selector */}
                 <div className="form-group" style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
@@ -464,7 +576,7 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
                   type="submit"
                   className="btn btn-primary"
                   style={{ width: '100%' }}
-                  disabled={orderProcessing}
+                  disabled={orderProcessing || !isAddressComplete}
                 >
                   <CreditCard size={16} />
                   {orderProcessing ? 'Securing Stock...' : 'Confirm & Place Order'}
