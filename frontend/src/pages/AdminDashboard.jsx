@@ -913,57 +913,25 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                 </select>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: productForm.isMultipleOption ? '1fr' : '1fr 1fr', gap: '1rem' }}>
-                {!productForm.isMultipleOption && (
-                  <div className="form-group">
-                    <label className="form-label">Price (රු LKR)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      required
-                      className="form-input"
-                      placeholder="16500.00"
-                      value={productForm.price}
-                      onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                    />
-                  </div>
-                )}
-                <div className="form-group">
-                  <label className="form-label">Category</label>
-                  <select
-                    className="form-input"
-                    value={productForm.category}
-                    onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-                  >
-                    <option value="protein">Protein</option>
-                    <option value="pre-workout">Pre-Workout</option>
-                    <option value="creatine">Creatine</option>
-                    <option value="recovery">Recovery</option>
-                    <option value="vitamins">Vitamins</option>
-                  </select>
-                </div>
-              </div>
-
-              {productForm.isMultipleOption && (
-                <div style={{ border: '1px dashed var(--border)', padding: '1.25rem', borderRadius: '8px', marginBottom: '1.25rem', backgroundColor: 'rgba(255,255,255,0.01)' }}>
-                  <h4 style={{ fontSize: '1rem', marginBottom: '1rem', fontFamily: 'Outfit', color: 'var(--primary)' }}>
-                    Multiple Option Settings
-                  </h4>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">Option Group Title</label>
-                      <input
-                        type="text"
-                        required
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                {productForm.isMultipleOption ? (
+                  <>
+                    <div className="form-group">
+                      <label className="form-label">Category</label>
+                      <select
                         className="form-input"
-                        placeholder="e.g. Select Flavor"
-                        value={productForm.optionTitle}
-                        onChange={(e) => setProductForm({ ...productForm, optionTitle: e.target.value })}
-                      />
+                        value={productForm.category}
+                        onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                      >
+                        <option value="protein">Protein</option>
+                        <option value="pre-workout">Pre-Workout</option>
+                        <option value="creatine">Creatine</option>
+                        <option value="recovery">Recovery</option>
+                        <option value="vitamins">Vitamins</option>
+                      </select>
                     </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">Selection Style</label>
+                    <div className="form-group">
+                      <label className="form-label">Multiple Option Selection Method</label>
                       <select
                         className="form-input"
                         value={productForm.selectionType}
@@ -973,8 +941,59 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                         <option value="radio">Radio Selector Cards</option>
                       </select>
                     </div>
-                  </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="form-group">
+                      <label className="form-label">Price (රු LKR)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        required
+                        className="form-input"
+                        placeholder="16500.00"
+                        value={productForm.price}
+                        onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Category</label>
+                      <select
+                        className="form-input"
+                        value={productForm.category}
+                        onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                      >
+                        <option value="protein">Protein</option>
+                        <option value="pre-workout">Pre-Workout</option>
+                        <option value="creatine">Creatine</option>
+                        <option value="recovery">Recovery</option>
+                        <option value="vitamins">Vitamins</option>
+                      </select>
+                    </div>
+                  </>
+                )}
+              </div>
 
+              {productForm.isMultipleOption && (
+                <div className="form-group">
+                  <label className="form-label">Option Group Title</label>
+                  <input
+                    type="text"
+                    required
+                    className="form-input"
+                    placeholder="e.g. Select Flavor"
+                    value={productForm.optionTitle}
+                    onChange={(e) => setProductForm({ ...productForm, optionTitle: e.target.value })}
+                  />
+                </div>
+              )}
+
+              {productForm.isMultipleOption && (
+                <div style={{ border: '1px dashed var(--border)', padding: '1.25rem', borderRadius: '8px', marginBottom: '1.25rem', backgroundColor: 'rgba(255,255,255,0.01)' }}>
+                  <h4 style={{ fontSize: '1.05rem', marginBottom: '1rem', fontFamily: 'Outfit', color: 'var(--primary)' }}>
+                    Option Items (e.g. Flavors, Sizes)
+                  </h4>
+                  
                   <span className="form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>Option Items:</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '220px', overflowY: 'auto', paddingRight: '5px', marginBottom: '1rem' }}>
                     {(productForm.selections || []).map((sel, idx) => (
