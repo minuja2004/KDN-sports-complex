@@ -252,27 +252,32 @@ const Shop = ({ user, cart = [], addToCart }) => {
                   </div>
                 )}
 
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddClick(product);
-                  }}
-                  className={`btn ${addedProductId === product.id ? 'btn-success-added' : 'btn-outline'}`}
-                  style={{ width: '100%' }}
-                  disabled={product.stock <= 0}
-                >
-                  {addedProductId === product.id ? (
-                    <>
-                      <CheckCircle size={14} />
-                      Added!
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart size={14} />
-                      Add to Cart
-                    </>
-                  )}
-                </button>
+                <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }} onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => {
+                      const success = addToCart(product);
+                      if (success) navigate('/cart');
+                    }}
+                    className="btn btn-primary"
+                    style={{ flex: '3', padding: '0.55rem', fontSize: '0.85rem' }}
+                    disabled={product.stock <= 0}
+                  >
+                    Buy Now
+                  </button>
+                  <button
+                    onClick={() => handleAddClick(product)}
+                    className={`btn ${addedProductId === product.id ? 'btn-success-added' : 'btn-outline'}`}
+                    style={{ flex: '1', padding: '0.55rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    disabled={product.stock <= 0}
+                    title="Add to Cart"
+                  >
+                    {addedProductId === product.id ? (
+                      <CheckCircle size={16} />
+                    ) : (
+                      <ShoppingCart size={16} />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           ))}

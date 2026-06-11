@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../utils/api';
-import { ArrowLeft, Star, ShoppingCart, ShieldCheck, Truck, RotateCcw, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingCart, ShieldCheck, Truck, RotateCcw, AlertTriangle, ChevronLeft, ChevronRight, CheckCircle } from 'lucide-react';
 
 const ProductDetails = ({ user, addToCart }) => {
   const { id } = useParams();
@@ -316,14 +316,36 @@ const ProductDetails = ({ user, addToCart }) => {
                 >+</button>
               </div>
 
-              <button
-                onClick={handleAddToCartClick}
-                className={`btn ${addedSuccess ? 'btn-success-added' : 'btn-primary'}`}
-                style={{ flexGrow: 1, padding: '0.75rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 'bold' }}
-              >
-                <ShoppingCart size={18} />
-                {addedSuccess ? 'Added to Cart!' : 'Add to Cart'}
-              </button>
+              <div style={{ display: 'flex', gap: '0.5rem', flexGrow: 1 }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    let success = false;
+                    for (let i = 0; i < quantity; i++) {
+                      success = addToCart(product);
+                      if (!success) break;
+                    }
+                    if (success) navigate('/cart');
+                  }}
+                  className="btn btn-primary"
+                  style={{ flex: '3', padding: '0.75rem 1.5rem', fontWeight: 'bold' }}
+                >
+                  Buy Now
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddToCartClick}
+                  className={`btn ${addedSuccess ? 'btn-success-added' : 'btn-outline'}`}
+                  style={{ flex: '1', padding: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  title="Add to Cart"
+                >
+                  {addedSuccess ? (
+                    <CheckCircle size={18} />
+                  ) : (
+                    <ShoppingCart size={18} />
+                  )}
+                </button>
+              </div>
             </div>
           ) : (
             <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--error)', color: 'var(--error)', padding: '1rem', borderRadius: '6px', textAlign: 'center', marginBottom: '2.5rem', fontSize: '0.95rem' }}>
@@ -456,21 +478,38 @@ const ProductDetails = ({ user, addToCart }) => {
                     </div>
                   )}
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const success = addToCart(p);
-                      if (success) {
-                        setAddedSuccessProductId(p.id);
-                        setTimeout(() => setAddedSuccessProductId(null), 1500);
-                      }
-                    }}
-                    className={`btn ${addedSuccessProductId === p.id ? 'btn-success-added' : 'btn-outline'}`}
-                    style={{ width: '100%', padding: '0.45rem', fontSize: '0.85rem' }}
-                    disabled={p.stock <= 0}
-                  >
-                    {addedSuccessProductId === p.id ? 'Added!' : 'Add to Cart'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }} onClick={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={() => {
+                        const success = addToCart(p);
+                        if (success) navigate('/cart');
+                      }}
+                      className="btn btn-primary"
+                      style={{ flex: '3', padding: '0.45rem', fontSize: '0.85rem' }}
+                      disabled={p.stock <= 0}
+                    >
+                      Buy Now
+                    </button>
+                    <button
+                      onClick={() => {
+                        const success = addToCart(p);
+                        if (success) {
+                          setAddedSuccessProductId(p.id);
+                          setTimeout(() => setAddedSuccessProductId(null), 1500);
+                        }
+                      }}
+                      className={`btn ${addedSuccessProductId === p.id ? 'btn-success-added' : 'btn-outline'}`}
+                      style={{ flex: '1', padding: '0.45rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      disabled={p.stock <= 0}
+                      title="Add to Cart"
+                    >
+                      {addedSuccessProductId === p.id ? (
+                        <CheckCircle size={16} />
+                      ) : (
+                        <ShoppingCart size={16} />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
