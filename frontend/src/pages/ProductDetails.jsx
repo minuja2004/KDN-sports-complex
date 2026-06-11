@@ -122,21 +122,21 @@ const ProductDetails = ({ user, addToCart }) => {
             borderRadius: '12px'
           }}></div>
           
-           <img
-            src={displayImage}
-            alt={product.name}
-            style={{
-              width: '100%',
-              height: '420px',
-              objectFit: 'cover',
-              borderRadius: '8px',
-              border: '2px solid var(--border-highlight)',
-              boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
-              position: 'relative',
-              zIndex: 1,
-              transition: 'all 0.3s ease'
-            }}
-          />
+            <img
+             src={displayImage}
+             alt={product.name}
+             style={{
+               width: '100%',
+               aspectRatio: '1 / 1',
+               objectFit: 'cover',
+               borderRadius: '8px',
+               border: '2px solid var(--border-highlight)',
+               boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
+               position: 'relative',
+               zIndex: 1,
+               transition: 'all 0.3s ease'
+             }}
+           />
 
           {/* Thumbnails gallery */}
           {product.images && product.images.length > 0 && (
@@ -342,7 +342,7 @@ const ProductDetails = ({ user, addToCart }) => {
                 }}
               >
                 <div>
-                  <div className="product-image-wrapper" style={{ height: '180px' }}>
+                  <div className="product-image-wrapper">
                     <img
                       src={p.image}
                       alt={p.name}
