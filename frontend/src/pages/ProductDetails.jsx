@@ -307,9 +307,10 @@ const ProductDetails = ({ user, addToCart }) => {
           {/* Option Picker UI */}
           {product.isMultipleOption && product.selections && product.selections.length > 0 && (
             <div style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.05rem', color: '#fff', marginBottom: '0.75rem' }}>
-                {product.optionTitle || 'Select Option'}
+              <h3 style={{ fontSize: '1.05rem', color: '#fff', marginBottom: '0.9rem', fontFamily: 'Outfit' }}>
+                {product.optionTitle || 'Select Option'}: <span style={{ color: 'var(--primary)', fontWeight: 'bold', marginLeft: '6px' }}>{selectedSelection?.name || ''}</span>
               </h3>
+              
               {product.selectionType === 'radio' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                   {product.selections.map(sel => {
@@ -359,6 +360,112 @@ const ProductDetails = ({ user, addToCart }) => {
                         <div style={{ fontWeight: 700, fontSize: '1.05rem', color: isSelected ? 'var(--primary)' : '#fff', marginLeft: '12px', flexShrink: 0 }}>
                           රු {sel.price.toFixed(2)}
                         </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : product.selectionType === 'image' ? (
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  {product.selections.map(sel => {
+                    const isSelected = selectedSelection && selectedSelection.id === sel.id;
+                    return (
+                      <button
+                        key={sel.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSelection(sel);
+                          setActiveImage(null);
+                        }}
+                        style={{
+                          width: '60px',
+                          height: '60px',
+                          borderRadius: '6px',
+                          overflow: 'hidden',
+                          border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)',
+                          boxShadow: isSelected ? '0 0 10px var(--primary-glow)' : 'none',
+                          cursor: 'pointer',
+                          padding: 0,
+                          backgroundColor: 'transparent',
+                          transition: 'all 0.2s',
+                          position: 'relative'
+                        }}
+                        title={`${sel.name} - රු ${sel.price.toFixed(2)}`}
+                      >
+                        <img
+                          src={sel.image || 'https://images.unsplash.com/photo-1579758629938-03607ccdbaba?w=100&auto=format&fit=crop&q=60'}
+                          alt={sel.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            right: 0,
+                            backgroundColor: 'var(--primary)',
+                            color: '#fff',
+                            borderTopLeftRadius: '4px',
+                            width: '12px',
+                            height: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '8px',
+                            fontWeight: 'bold'
+                          }}>
+                            ✓
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : product.selectionType === 'button' ? (
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {product.selections.map(sel => {
+                    const isSelected = selectedSelection && selectedSelection.id === sel.id;
+                    return (
+                      <button
+                        key={sel.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSelection(sel);
+                          setActiveImage(null);
+                        }}
+                        style={{
+                          padding: '0.65rem 1.25rem',
+                          borderRadius: '6px',
+                          border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)',
+                          backgroundColor: isSelected ? 'rgba(240, 129, 25, 0.05)' : '#18181b',
+                          color: isSelected ? 'var(--primary)' : '#e4e4e7',
+                          fontWeight: isSelected ? 'bold' : 'normal',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          fontSize: '0.9rem',
+                          position: 'relative',
+                          boxShadow: isSelected ? '0 0 10px rgba(240, 129, 25, 0.1)' : 'none'
+                        }}
+                        title={`${sel.name} - රු ${sel.price.toFixed(2)}`}
+                      >
+                        {sel.name}
+                        {isSelected && (
+                          <div style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            right: 0,
+                            backgroundColor: 'var(--primary)',
+                            color: '#fff',
+                            borderTopLeftRadius: '4px',
+                            width: '12px',
+                            height: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '8px',
+                            fontWeight: 'bold'
+                          }}>
+                            ✓
+                          </div>
+                        )}
                       </button>
                     );
                   })}

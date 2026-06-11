@@ -939,6 +939,8 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                       >
                         <option value="dropdown">Dropdown Options</option>
                         <option value="radio">Radio Selector Cards</option>
+                        <option value="image">Image Swatches Grid</option>
+                        <option value="button">Button Tags Selector</option>
                       </select>
                     </div>
                   </>
