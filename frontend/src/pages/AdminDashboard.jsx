@@ -898,10 +898,13 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                   value={productForm.isMultipleOption ? 'multiple' : 'single'}
                   onChange={(e) => {
                     const isMult = e.target.value === 'multiple';
+                    const currentSelections = productForm.selections || [];
                     setProductForm({ 
                       ...productForm, 
                       isMultipleOption: isMult,
-                      selections: isMult && productForm.selections.length === 0 ? [{ id: Math.random().toString(36).substr(2, 9), name: '', price: '', description: '', image: '' }] : productForm.selections
+                      selections: isMult && currentSelections.length === 0 
+                        ? [{ id: Math.random().toString(36).substr(2, 9), name: '', price: '', description: '', image: '' }] 
+                        : currentSelections
                     });
                   }}
                 >
@@ -974,12 +977,12 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
 
                   <span className="form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>Option Items:</span>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '220px', overflowY: 'auto', paddingRight: '5px', marginBottom: '1rem' }}>
-                    {productForm.selections.map((sel, idx) => (
+                    {(productForm.selections || []).map((sel, idx) => (
                       <div key={sel.id} style={{ border: '1px solid #2d2d32', padding: '0.75rem', borderRadius: '6px', backgroundColor: '#18181b', position: 'relative' }}>
                         <button
                           type="button"
                           onClick={() => {
-                            const filtered = productForm.selections.filter((_, i) => i !== idx);
+                            const filtered = (productForm.selections || []).filter((_, i) => i !== idx);
                             setProductForm({ ...productForm, selections: filtered });
                           }}
                           style={{
@@ -1109,7 +1112,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                       setProductForm({
                         ...productForm,
                         selections: [
-                          ...productForm.selections,
+                          ...(productForm.selections || []),
                           { id: Math.random().toString(36).substr(2, 9), name: '', price: '', description: '', image: '' }
                         ]
                       });
