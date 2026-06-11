@@ -25,7 +25,7 @@ router.get('/all', verifyAdmin, async (req, res) => {
 
 // POST /api/orders - Checkout a cart (requires login)
 router.post('/', verifyToken, async (req, res) => {
-  const { items, shippingDetails, totalAmount } = req.body;
+  const { items, shippingDetails, totalAmount, paymentMethod } = req.body;
 
   if (!items || !items.length || !shippingDetails || !totalAmount) {
     return res.status(400).json({ message: 'Missing order details (items, shipping address, and total amount).' });
@@ -68,7 +68,8 @@ router.post('/', verifyToken, async (req, res) => {
       items: processedItems,
       shippingDetails,
       totalAmount: parseFloat(totalAmount),
-      paymentStatus: 'Paid', // Pre-authorized mock payment
+      paymentMethod: paymentMethod || 'card',
+      paymentStatus: (paymentMethod === 'cod') ? 'Pending' : 'Paid',
       orderStatus: 'Pending'
     });
 

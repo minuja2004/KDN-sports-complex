@@ -307,6 +307,16 @@ const Shop = ({ user, cart = [], addToCart }) => {
                       <span style={{ fontSize: '1.1rem', color: 'var(--primary)', fontWeight: 'bold' }}>රු {order.totalAmount.toFixed(2)}</span>
                     </div>
                     <div>
+                      <span className="text-muted" style={{ fontSize: '0.8rem', display: 'block' }}>PAYMENT METHOD</span>
+                      <span style={{ fontSize: '0.9rem', color: '#fff', fontWeight: 600 }}>
+                        {order.paymentMethod === 'cod' ? (order.shippingDetails.address.includes('Store Pickup') ? 'Pay on Pickup' : 'Cash on Delivery') :
+                         order.paymentMethod === 'koko' ? 'Koko BNPL' : 'Card Payment'}
+                      </span>
+                      <span style={{ fontSize: '0.75rem', marginLeft: '8px', verticalAlign: 'middle' }} className={`badge ${order.paymentStatus === 'Paid' ? 'badge-success' : 'badge-pending'}`}>
+                        {order.paymentStatus}
+                      </span>
+                    </div>
+                    <div>
                       <span className="text-muted" style={{ fontSize: '0.8rem', display: 'block', marginBottom: '0.25rem' }}>STATUS</span>
                       <span className={`badge ${
                         order.orderStatus === 'Pending' ? 'badge-pending' :

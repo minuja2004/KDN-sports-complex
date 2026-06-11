@@ -82,6 +82,7 @@ const OrderSchema = new mongoose.Schema({
   totalAmount: Number,
   paymentStatus: String,
   orderStatus: String,
+  paymentMethod: { type: String, default: 'card' },
   createdAt: { type: String, default: () => new Date().toISOString() }
 });
 

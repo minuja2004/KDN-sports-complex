@@ -635,6 +635,16 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Charged amount:</span>
                         <strong style={{ color: 'var(--primary)' }}>රු {order.totalAmount.toFixed(2)}</strong>
                       </div>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block' }}>Payment Detail:</span>
+                        <span style={{ fontSize: '0.85rem', color: '#fff', fontWeight: 600 }}>
+                          {order.paymentMethod === 'cod' ? (order.shippingDetails.address.includes('Store Pickup') ? 'Pay on Pickup' : 'Cash on Delivery') :
+                           order.paymentMethod === 'koko' ? 'Koko BNPL' : 'Card Payment'}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', marginLeft: '6px', verticalAlign: 'middle' }} className={`badge ${order.paymentStatus === 'Paid' ? 'badge-success' : 'badge-pending'}`}>
+                          {order.paymentStatus}
+                        </span>
+                      </div>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>

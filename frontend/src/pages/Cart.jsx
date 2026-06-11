@@ -41,6 +41,7 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
     return 'delivery';
   });
 
+  const [paymentMethod, setPaymentMethod] = useState('card');
   const [orderProcessing, setOrderProcessing] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
   const [error, setError] = useState('');
@@ -89,6 +90,7 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
           address: address,
           phone: shipping.phone
         },
+        paymentMethod: paymentMethod,
         totalAmount: orderTotal
       };
 
@@ -346,7 +348,7 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
                   </div>
                 )}
 
-                <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                 <div className="form-group" style={{ marginBottom: '1.5rem' }}>
                   <label className="form-label">Contact Phone (10 Digits)</label>
                   <input
                     type="tel"
@@ -356,6 +358,106 @@ const Cart = ({ user, cart, updateQuantity, cartTotal, clearCart }) => {
                     onChange={handlePhoneChange}
                     placeholder="0771234567"
                   />
+                </div>
+
+                {/* Payment Method Selector */}
+                <div className="form-group" style={{ marginTop: '1.5rem', marginBottom: '1.5rem' }}>
+                  <label className="form-label">Payment Method</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      backgroundColor: paymentMethod === 'card' ? 'rgba(240, 129, 25, 0.1)' : 'var(--bg-surface-elevated)',
+                      border: paymentMethod === 'card' ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={paymentMethod === 'card'}
+                        onChange={() => setPaymentMethod('card')}
+                        style={{ accentColor: 'var(--primary)', cursor: 'pointer' }}
+                      />
+                      <div>
+                        <strong style={{ color: '#fff', fontSize: '0.95rem', display: 'block' }}>💳 Card Payment (Mock Visa/Mastercard)</strong>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Secure checkout with standard card.</span>
+                      </div>
+                    </label>
+
+                    <label style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      backgroundColor: paymentMethod === 'cod' ? 'rgba(240, 129, 25, 0.1)' : 'var(--bg-surface-elevated)',
+                      border: paymentMethod === 'cod' ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}>
+                      <input
+                        type="radio"
+                        name="paymentMethod"
+                        checked={paymentMethod === 'cod'}
+                        onChange={() => setPaymentMethod('cod')}
+                        style={{ accentColor: 'var(--primary)', cursor: 'pointer' }}
+                      />
+                      <div>
+                        <strong style={{ color: '#fff', fontSize: '0.95rem', display: 'block' }}>
+                          {deliveryMethod === 'delivery' ? '💵 Cash on Delivery (COD)' : '🏪 Pay on Pickup'}
+                        </strong>
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                          {deliveryMethod === 'delivery' ? 'Pay with cash upon package arrival.' : 'Pay at the office counter.'}
+                        </span>
+                      </div>
+                    </label>
+
+                    {cart.some(item => item.allowKoko) && (
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px',
+                        backgroundColor: paymentMethod === 'koko' ? 'rgba(240, 129, 25, 0.1)' : 'var(--bg-surface-elevated)',
+                        border: paymentMethod === 'koko' ? '2px solid var(--primary)' : '1px solid var(--border)',
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}>
+                        <input
+                          type="radio"
+                          name="paymentMethod"
+                          checked={paymentMethod === 'koko'}
+                          onChange={() => setPaymentMethod('koko')}
+                          style={{ accentColor: 'var(--primary)', cursor: 'pointer' }}
+                        />
+                        <div style={{ flexGrow: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+                            <strong style={{ color: '#fff', fontSize: '0.95rem' }}>Split with Koko (3 Installments)</strong>
+                            <svg viewBox="0 0 135 45" width="48" height="15" style={{ verticalAlign: 'middle' }}>
+                              <defs>
+                                <pattern id="koko-stripes-cart" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                                  <rect width="4" height="4" fill="#00D2CA" />
+                                  <line x1="0" y1="0" x2="0" y2="4" stroke="#0D1B50" strokeWidth="1.2" />
+                                </pattern>
+                              </defs>
+                              <text x="2" y="37" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes-cart)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                              <text x="3" y="36" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes-cart)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                              <text x="4" y="35" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes-cart)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                              <text x="5" y="34" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="#FFAEC9" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                            </svg>
+                          </div>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                            Pay 3 interest-free installments of <strong style={{ color: '#fff' }}>රු {(orderTotal / 3).toFixed(2)}</strong>.
+                          </span>
+                        </div>
+                      </label>
+                    )}
+                  </div>
                 </div>
 
                 <button
