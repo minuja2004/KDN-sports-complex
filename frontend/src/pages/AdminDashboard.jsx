@@ -245,8 +245,8 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
     if (files.length === 0) return;
 
     const validFiles = files.filter(file => {
-      if (file.size > 2 * 1024 * 1024) {
-        alert(`Selected file "${file.name}" is too large. Please select images under 2MB.`);
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`Selected file "${file.name}" is too large. Please select images under 5MB.`);
         return false;
       }
       return true;
