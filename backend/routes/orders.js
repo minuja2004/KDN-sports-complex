@@ -36,7 +36,8 @@ router.post('/', verifyToken, async (req, res) => {
     
     // First pass: validate stock for all items
     for (const item of items) {
-      const product = await Products.findById(item.id);
+      const actualProductId = item.productId || (item.id && item.id.includes('-') ? item.id.split('-')[0] : item.id);
+      const product = await Products.findById(actualProductId);
       if (!product) {
         return res.status(404).json({ message: `Product "${item.name}" not found.` });
       }
@@ -45,19 +46,23 @@ router.post('/', verifyToken, async (req, res) => {
       }
       processedItems.push({
         id: product.id,
-        name: product.name,
-        price: product.price,
+        name: item.name || product.name,
+        price: item.price !== undefined ? parseFloat(item.price) : product.price,
         quantity: item.quantity,
-        image: product.image
+        image: item.image || product.image,
+        selectedOption: item.selectedOption || null
       });
     }
 
     // Second pass: deduct stock
     for (const item of items) {
-      const product = await Products.findById(item.id);
-      await Products.findByIdAndUpdate(product.id, {
-        stock: product.stock - item.quantity
-      });
+      const actualProductId = item.productId || (item.id && item.id.includes('-') ? item.id.split('-')[0] : item.id);
+      const product = await Products.findById(actualProductId);
+      if (product) {
+        await Products.findByIdAndUpdate(actualProductId, {
+          stock: product.stock - item.quantity
+        });
+      }
     }
 
     // Create order record

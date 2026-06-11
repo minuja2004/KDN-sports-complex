@@ -202,7 +202,11 @@ const Shop = ({ user, cart = [], addToCart }) => {
 
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>රු {product.price.toFixed(2)}</span>
+                  <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>
+                    {product.isMultipleOption && product.selections && product.selections.length > 0
+                      ? `From රු ${Math.min(...product.selections.map(s => s.price)).toFixed(2)}`
+                      : `රු ${product.price.toFixed(2)}`}
+                  </span>
                   <span style={{ fontSize: '0.75rem', color: product.stock > 0 ? 'var(--success)' : 'var(--error)' }}>
                     {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
                   </span>
@@ -218,7 +222,13 @@ const Shop = ({ user, cart = [], addToCart }) => {
                     marginTop: '-0.5rem', 
                     marginBottom: '1rem' 
                   }}>
-                    <span>or 3 X <strong style={{ color: '#fff' }}>රු {(product.price / 3).toFixed(2)}</strong> with</span>
+                    <span>
+                      or 3 X <strong style={{ color: '#fff' }}>
+                        {product.isMultipleOption && product.selections && product.selections.length > 0
+                          ? `From රු ${(Math.min(...product.selections.map(s => s.price)) / 3).toFixed(2)}`
+                          : `රු ${(product.price / 3).toFixed(2)}`}
+                      </strong> with
+                    </span>
                     <svg viewBox="0 0 135 45" width="55" height="18" style={{ verticalAlign: 'middle', marginLeft: '3px', marginRight: '3px' }}>
                       <defs>
                         <pattern id="koko-stripes" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
@@ -255,8 +265,12 @@ const Shop = ({ user, cart = [], addToCart }) => {
                 <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }} onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => {
-                      const success = addToCart(product);
-                      if (success) navigate('/cart');
+                      if (product.isMultipleOption) {
+                        navigate(`/shop/product/${product.id}`);
+                      } else {
+                        const success = addToCart(product);
+                        if (success) navigate('/cart');
+                      }
                     }}
                     className="btn btn-primary"
                     style={{ flex: '3', padding: '0.55rem', fontSize: '0.85rem' }}
@@ -265,7 +279,13 @@ const Shop = ({ user, cart = [], addToCart }) => {
                     Buy Now
                   </button>
                   <button
-                    onClick={() => handleAddClick(product)}
+                    onClick={() => {
+                      if (product.isMultipleOption) {
+                        navigate(`/shop/product/${product.id}`);
+                      } else {
+                        handleAddClick(product);
+                      }
+                    }}
                     className={`btn ${addedProductId === product.id ? 'btn-success-added' : 'btn-outline'}`}
                     style={{ flex: '1', padding: '0.55rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     disabled={product.stock <= 0}

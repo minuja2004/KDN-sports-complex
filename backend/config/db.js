@@ -65,7 +65,11 @@ const ProductSchema = new mongoose.Schema({
   category: String,
   stock: Number,
   rating: Number,
-  allowKoko: { type: Boolean, default: false }
+  allowKoko: { type: Boolean, default: false },
+  isMultipleOption: { type: Boolean, default: false },
+  optionTitle: { type: String, default: "" },
+  selectionType: { type: String, default: "dropdown" },
+  selections: { type: [mongoose.Schema.Types.Mixed], default: [] }
 });
 
 const OrderSchema = new mongoose.Schema({

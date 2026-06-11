@@ -47,7 +47,11 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
     images: [],
     category: 'protein',
     stock: '',
-    allowKoko: true
+    allowKoko: true,
+    isMultipleOption: false,
+    optionTitle: '',
+    selectionType: 'dropdown',
+    selections: []
   });
 
   // Gym Member Modal state
@@ -220,7 +224,11 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
       images: [],
       category: 'protein',
       stock: '',
-      allowKoko: true
+      allowKoko: true,
+      isMultipleOption: false,
+      optionTitle: '',
+      selectionType: 'dropdown',
+      selections: []
     });
     setProductModalOpen(true);
   };
@@ -235,7 +243,11 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
       images: product.images || (product.image ? [product.image] : []),
       category: product.category,
       stock: product.stock,
-      allowKoko: product.allowKoko !== undefined ? product.allowKoko : true
+      allowKoko: product.allowKoko !== undefined ? product.allowKoko : true,
+      isMultipleOption: product.isMultipleOption || false,
+      optionTitle: product.optionTitle || '',
+      selectionType: product.selectionType || 'dropdown',
+      selections: product.selections || []
     });
     setProductModalOpen(true);
   };
@@ -283,18 +295,31 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
 
   const handleSaveProduct = async (e) => {
     e.preventDefault();
-    if (!productForm.name || !productForm.price || !productForm.category || productForm.stock === '') return;
+    if (!productForm.name || !productForm.category || productForm.stock === '') return;
+
+    if (!productForm.isMultipleOption && !productForm.price) {
+      alert('Price is required for single products.');
+      return;
+    }
+    if (productForm.isMultipleOption && (!productForm.selections || productForm.selections.length === 0)) {
+      alert('At least one option selection item is required for option products.');
+      return;
+    }
 
     try {
       const payload = {
         name: productForm.name,
         description: productForm.description,
-        price: parseFloat(productForm.price),
+        price: productForm.isMultipleOption ? parseFloat(productForm.selections[0]?.price || 0) : parseFloat(productForm.price),
         image: productForm.image,
         images: productForm.images || [],
         category: productForm.category,
         stock: parseInt(productForm.stock),
-        allowKoko: productForm.allowKoko
+        allowKoko: productForm.allowKoko,
+        isMultipleOption: productForm.isMultipleOption,
+        optionTitle: productForm.optionTitle,
+        selectionType: productForm.selectionType,
+        selections: productForm.selections || []
       };
 
       if (editingProduct) {
@@ -843,7 +868,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
           zIndex: 1000,
           padding: '1rem'
         }}>
-          <div className="card card-accent animate-fade-in" style={{ maxWidth: '480px', width: '100%', padding: '2rem', backgroundColor: '#141416' }}>
+          <div className="card card-accent animate-fade-in" style={{ maxWidth: '520px', width: '100%', padding: '2rem', backgroundColor: '#141416', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h3 style={{ fontFamily: 'Outfit', fontSize: '1.4rem' }}>
                 {editingProduct ? 'Edit Supplement Info' : 'Add New Supplement'}
@@ -866,19 +891,40 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                <div className="form-group">
-                  <label className="form-label">Price (රු LKR)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    className="form-input"
-                    placeholder="16500.00"
-                    value={productForm.price}
-                    onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                  />
-                </div>
+              <div className="form-group">
+                <label className="form-label">Product Type</label>
+                <select
+                  className="form-input"
+                  value={productForm.isMultipleOption ? 'multiple' : 'single'}
+                  onChange={(e) => {
+                    const isMult = e.target.value === 'multiple';
+                    setProductForm({ 
+                      ...productForm, 
+                      isMultipleOption: isMult,
+                      selections: isMult && productForm.selections.length === 0 ? [{ id: Math.random().toString(36).substr(2, 9), name: '', price: '', description: '', image: '' }] : productForm.selections
+                    });
+                  }}
+                >
+                  <option value="single">Single Product (Standard)</option>
+                  <option value="multiple">Multiple Options Product (e.g. Flavors, Sizes)</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: productForm.isMultipleOption ? '1fr' : '1fr 1fr', gap: '1rem' }}>
+                {!productForm.isMultipleOption && (
+                  <div className="form-group">
+                    <label className="form-label">Price (රු LKR)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      required
+                      className="form-input"
+                      placeholder="16500.00"
+                      value={productForm.price}
+                      onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                    />
+                  </div>
+                )}
                 <div className="form-group">
                   <label className="form-label">Category</label>
                   <select
@@ -895,6 +941,187 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                 </div>
               </div>
 
+              {productForm.isMultipleOption && (
+                <div style={{ border: '1px dashed var(--border)', padding: '1.25rem', borderRadius: '8px', marginBottom: '1.25rem', backgroundColor: 'rgba(255,255,255,0.01)' }}>
+                  <h4 style={{ fontSize: '1rem', marginBottom: '1rem', fontFamily: 'Outfit', color: 'var(--primary)' }}>
+                    Multiple Option Settings
+                  </h4>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Option Group Title</label>
+                      <input
+                        type="text"
+                        required
+                        className="form-input"
+                        placeholder="e.g. Select Flavor"
+                        value={productForm.optionTitle}
+                        onChange={(e) => setProductForm({ ...productForm, optionTitle: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Selection Style</label>
+                      <select
+                        className="form-input"
+                        value={productForm.selectionType}
+                        onChange={(e) => setProductForm({ ...productForm, selectionType: e.target.value })}
+                      >
+                        <option value="dropdown">Dropdown Options</option>
+                        <option value="radio">Radio Selector Cards</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <span className="form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>Option Items:</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxHeight: '220px', overflowY: 'auto', paddingRight: '5px', marginBottom: '1rem' }}>
+                    {productForm.selections.map((sel, idx) => (
+                      <div key={sel.id} style={{ border: '1px solid #2d2d32', padding: '0.75rem', borderRadius: '6px', backgroundColor: '#18181b', position: 'relative' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const filtered = productForm.selections.filter((_, i) => i !== idx);
+                            setProductForm({ ...productForm, selections: filtered });
+                          }}
+                          style={{
+                            position: 'absolute',
+                            top: '8px',
+                            right: '8px',
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--error)',
+                            cursor: 'pointer',
+                            padding: 0
+                          }}
+                          title="Remove option"
+                        >
+                          <X size={16} />
+                        </button>
+                        
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                          <div>
+                            <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Option Name</label>
+                            <input
+                              type="text"
+                              required
+                              className="form-input"
+                              placeholder="e.g. Chocolate 1kg"
+                              style={{ padding: '0.3rem 0.5rem', fontSize: '0.85rem' }}
+                              value={sel.name}
+                              onChange={(e) => {
+                                const newSels = [...productForm.selections];
+                                newSels[idx].name = e.target.value;
+                                setProductForm({ ...productForm, selections: newSels });
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Price (LKR)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              required
+                              className="form-input"
+                              placeholder="16000"
+                              style={{ padding: '0.3rem 0.5rem', fontSize: '0.85rem' }}
+                              value={sel.price}
+                              onChange={(e) => {
+                                const newSels = [...productForm.selections];
+                                newSels[idx].price = e.target.value;
+                                setProductForm({ ...productForm, selections: newSels });
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr', gap: '0.75rem', alignItems: 'center' }}>
+                          <div>
+                            <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Option Description (Optional)</label>
+                            <input
+                              type="text"
+                              className="form-input"
+                              placeholder="Nutritional detail or size"
+                              style={{ padding: '0.3rem 0.5rem', fontSize: '0.85rem' }}
+                              value={sel.description || ''}
+                              onChange={(e) => {
+                                const newSels = [...productForm.selections];
+                                newSels[idx].description = e.target.value;
+                                setProductForm({ ...productForm, selections: newSels });
+                              }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block' }}>Option Photo</label>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                id={`sel-img-${sel.id}`}
+                                onChange={(e) => {
+                                  const file = e.target.files[0];
+                                  if (!file) return;
+                                  if (file.size > 5 * 1024 * 1024) {
+                                    alert('Image must be under 5MB.');
+                                    return;
+                                  }
+                                  const reader = new FileReader();
+                                  reader.onloadend = () => {
+                                    const newSels = [...productForm.selections];
+                                    newSels[idx].image = reader.result;
+                                    setProductForm({ ...productForm, selections: newSels });
+                                  };
+                                  reader.readAsDataURL(file);
+                                }}
+                              />
+                              <label
+                                htmlFor={`sel-img-${sel.id}`}
+                                style={{
+                                  backgroundColor: 'var(--bg-surface-elevated)',
+                                  border: '1px solid var(--border)',
+                                  borderRadius: '4px',
+                                  padding: '4px 8px',
+                                  fontSize: '0.75rem',
+                                  cursor: 'pointer',
+                                  color: '#fff',
+                                  textAlign: 'center',
+                                  flexGrow: 1
+                                }}
+                              >
+                                {sel.image ? 'Change' : 'Upload'}
+                              </label>
+                              {sel.image && (
+                                <img
+                                  src={sel.image}
+                                  alt="Option Thumbnail"
+                                  style={{ width: '28px', height: '28px', objectFit: 'cover', borderRadius: '4px', border: '1px solid var(--border)' }}
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProductForm({
+                        ...productForm,
+                        selections: [
+                          ...productForm.selections,
+                          { id: Math.random().toString(36).substr(2, 9), name: '', price: '', description: '', image: '' }
+                        ]
+                      });
+                    }}
+                    className="btn btn-outline"
+                    style={{ width: '100%', padding: '0.4rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+                  >
+                    <Plus size={14} /> Add Selection Option Item
+                  </button>
+                </div>
+              )}
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div className="form-group">
                   <label className="form-label">Stock Units</label>
@@ -907,7 +1134,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                     onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
                   />
                 </div>
-                 <div className="form-group">
+                <div className="form-group">
                   <label className="form-label">Upload Product Images</label>
                   <input
                     type="file"

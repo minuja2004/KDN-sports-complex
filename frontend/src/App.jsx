@@ -46,7 +46,10 @@ const AppContent = ({ user, onLogin, onLogout }) => {
       return false;
     }
 
-    const existing = cart.find(item => item.id === product.id);
+    const selectedOption = product.selectedOption || null;
+    const compositeId = selectedOption ? `${product.id}-${selectedOption.id}` : product.id;
+
+    const existing = cart.find(item => item.id === compositeId);
     let success = false;
     
     if (existing) {
@@ -55,13 +58,23 @@ const AppContent = ({ user, onLogin, onLogout }) => {
         return false;
       }
       setCart(cart.map(item =>
-        item.id === product.id
+        item.id === compositeId
           ? { ...item, quantity: item.quantity + 1 }
           : item
       ));
       success = true;
     } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
+      const newCartItem = {
+        ...product,
+        id: compositeId,
+        productId: product.id,
+        selectedOption,
+        name: selectedOption ? `${product.name} (${selectedOption.name})` : product.name,
+        price: selectedOption ? selectedOption.price : product.price,
+        image: selectedOption && selectedOption.image ? selectedOption.image : product.image,
+        quantity: 1
+      };
+      setCart([...cart, newCartItem]);
       success = true;
     }
 

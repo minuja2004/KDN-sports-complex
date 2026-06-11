@@ -14,13 +14,16 @@ const ProductDetails = ({ user, addToCart }) => {
   const [addedSuccess, setAddedSuccess] = useState(false);
   const [addedSuccessProductId, setAddedSuccessProductId] = useState(null);
   const [activeImage, setActiveImage] = useState(null);
+  const [selectedSelection, setSelectedSelection] = useState(null);
 
   useEffect(() => {
     setActiveImage(null);
     fetchProductDetails();
   }, [id]);
 
-  const displayImage = activeImage || (product ? (product.images && product.images[0]) || product.image : '');
+  const displayImage = activeImage || 
+                       (selectedSelection && selectedSelection.image ? selectedSelection.image : '') || 
+                       (product ? (product.images && product.images[0]) || product.image : '');
 
   const fetchProductDetails = async () => {
     setLoading(true);
@@ -28,6 +31,11 @@ const ProductDetails = ({ user, addToCart }) => {
     try {
       const data = await api.products.getDetails(id);
       setProduct(data);
+      if (data.isMultipleOption && data.selections && data.selections.length > 0) {
+        setSelectedSelection(data.selections[0]);
+      } else {
+        setSelectedSelection(null);
+      }
 
       // Fetch all products to construct related suggestions
       try {
@@ -79,10 +87,15 @@ const ProductDetails = ({ user, addToCart }) => {
   const handleAddToCartClick = () => {
     if (!product) return;
     
-    // Add product to cart with the specified quantity
+    // Add product to cart with option attached
+    const productWithOption = {
+      ...product,
+      selectedOption: selectedSelection
+    };
+
     let success = false;
     for (let i = 0; i < quantity; i++) {
-      success = addToCart(product);
+      success = addToCart(productWithOption);
       if (!success) break;
     }
 
@@ -236,7 +249,7 @@ const ProductDetails = ({ user, addToCart }) => {
           {/* Price & Stock status */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
             <div style={{ fontSize: '2.2rem', fontWeight: 800, color: 'var(--primary)' }}>
-              රු {product.price.toFixed(2)}
+              රු {(selectedSelection ? selectedSelection.price : product.price).toFixed(2)}
             </div>
             <div>
               <span className={`badge ${product.stock > 0 ? 'badge-success' : 'badge-error'}`} style={{ fontSize: '0.85rem', padding: '0.4rem 0.8rem' }}>
@@ -257,7 +270,7 @@ const ProductDetails = ({ user, addToCart }) => {
               marginBottom: '1.5rem',
               flexWrap: 'wrap'
             }}>
-              <span>or 3 X <strong style={{ color: '#fff' }}>රු {(product.price / 3).toFixed(2)}</strong> with</span>
+              <span>or 3 X <strong style={{ color: '#fff' }}>රු {((selectedSelection ? selectedSelection.price : product.price) / 3).toFixed(2)}</strong> with</span>
               <svg viewBox="0 0 135 45" width="55" height="18" style={{ verticalAlign: 'middle', marginLeft: '3px', marginRight: '3px' }}>
                 <defs>
                   <pattern id="koko-stripes-details" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
@@ -291,11 +304,93 @@ const ProductDetails = ({ user, addToCart }) => {
             </div>
           )}
 
+          {/* Option Picker UI */}
+          {product.isMultipleOption && product.selections && product.selections.length > 0 && (
+            <div style={{ marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.05rem', color: '#fff', marginBottom: '0.75rem' }}>
+                {product.optionTitle || 'Select Option'}
+              </h3>
+              {product.selectionType === 'radio' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {product.selections.map(sel => {
+                    const isSelected = selectedSelection && selectedSelection.id === sel.id;
+                    return (
+                      <button
+                        key={sel.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedSelection(sel);
+                          setActiveImage(null);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '1rem',
+                          borderRadius: '8px',
+                          border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)',
+                          backgroundColor: isSelected ? 'rgba(240, 129, 25, 0.04)' : '#18181b',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          transition: 'all 0.2s',
+                          boxShadow: isSelected ? '0 0 12px rgba(240, 129, 25, 0.15)' : 'none'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{
+                            width: '16px',
+                            height: '16px',
+                            borderRadius: '50%',
+                            border: '2px solid ' + (isSelected ? 'var(--primary)' : 'var(--text-muted)'),
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}>
+                            {isSelected && <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--primary)' }}></div>}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: '0.95rem', color: isSelected ? '#fff' : '#e4e4e7' }}>{sel.name}</div>
+                            {sel.description && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>{sel.description}</div>}
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: '1.05rem', color: isSelected ? 'var(--primary)' : '#fff', marginLeft: '12px', flexShrink: 0 }}>
+                          රු {sel.price.toFixed(2)}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <select
+                  className="form-input"
+                  style={{ width: '100%', padding: '0.75rem 1rem', fontSize: '0.95rem', borderRadius: '8px', cursor: 'pointer', backgroundColor: '#18181b' }}
+                  value={selectedSelection ? selectedSelection.id : ''}
+                  onChange={(e) => {
+                    const sel = product.selections.find(s => s.id === e.target.value);
+                    if (sel) {
+                      setSelectedSelection(sel);
+                      setActiveImage(null);
+                    }
+                  }}
+                >
+                  {product.selections.map(sel => (
+                    <option key={sel.id} value={sel.id}>
+                      {sel.name} - රු {sel.price.toFixed(2)}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
+
           {/* Description */}
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.05rem', color: '#fff', marginBottom: '0.5rem' }}>Product Overview</h3>
             <p className="text-muted" style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>
-              {product.description || 'No detailed description available for this supplement.'}
+              {(selectedSelection && selectedSelection.description) || product.description || 'No detailed description available for this supplement.'}
             </p>
           </div>
 
@@ -320,9 +415,13 @@ const ProductDetails = ({ user, addToCart }) => {
                 <button
                   type="button"
                   onClick={() => {
+                    const productWithOption = {
+                      ...product,
+                      selectedOption: selectedSelection
+                    };
                     let success = false;
                     for (let i = 0; i < quantity; i++) {
-                      success = addToCart(product);
+                      success = addToCart(productWithOption);
                       if (!success) break;
                     }
                     if (success) navigate('/cart');
@@ -427,7 +526,11 @@ const ProductDetails = ({ user, addToCart }) => {
 
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>රු {p.price.toFixed(2)}</span>
+                    <span style={{ fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>
+                      {p.isMultipleOption && p.selections && p.selections.length > 0
+                        ? `From රු ${Math.min(...p.selections.map(s => s.price)).toFixed(2)}`
+                        : `රු ${p.price.toFixed(2)}`}
+                    </span>
                     <span style={{ fontSize: '0.75rem', color: p.stock > 0 ? 'var(--success)' : 'var(--error)' }}>
                       {p.stock > 0 ? 'In Stock' : 'Out of Stock'}
                     </span>
@@ -444,7 +547,13 @@ const ProductDetails = ({ user, addToCart }) => {
                       marginBottom: '1rem',
                       flexWrap: 'wrap'
                     }}>
-                      <span>or 3 X <strong style={{ color: '#fff' }}>රු {(p.price / 3).toFixed(2)}</strong> with</span>
+                      <span>
+                        or 3 X <strong style={{ color: '#fff' }}>
+                          {p.isMultipleOption && p.selections && p.selections.length > 0
+                            ? `From රු ${(Math.min(...p.selections.map(s => s.price)) / 3).toFixed(2)}`
+                            : `රු ${(p.price / 3).toFixed(2)}`}
+                        </strong> with
+                      </span>
                       <svg viewBox="0 0 135 45" width="48" height="15" style={{ verticalAlign: 'middle', marginLeft: '2px', marginRight: '2px' }}>
                         <defs>
                           <pattern id={`koko-stripes-${p.id}`} width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
@@ -481,8 +590,12 @@ const ProductDetails = ({ user, addToCart }) => {
                   <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }} onClick={(e) => e.stopPropagation()}>
                     <button
                       onClick={() => {
-                        const success = addToCart(p);
-                        if (success) navigate('/cart');
+                        if (p.isMultipleOption) {
+                          navigate(`/shop/product/${p.id}`);
+                        } else {
+                          const success = addToCart(p);
+                          if (success) navigate('/cart');
+                        }
                       }}
                       className="btn btn-primary"
                       style={{ flex: '3', padding: '0.45rem', fontSize: '0.85rem' }}
@@ -492,10 +605,14 @@ const ProductDetails = ({ user, addToCart }) => {
                     </button>
                     <button
                       onClick={() => {
-                        const success = addToCart(p);
-                        if (success) {
-                          setAddedSuccessProductId(p.id);
-                          setTimeout(() => setAddedSuccessProductId(null), 1500);
+                        if (p.isMultipleOption) {
+                          navigate(`/shop/product/${p.id}`);
+                        } else {
+                          const success = addToCart(p);
+                          if (success) {
+                            setAddedSuccessProductId(p.id);
+                            setTimeout(() => setAddedSuccessProductId(null), 1500);
+                          }
                         }
                       }}
                       className={`btn ${addedSuccessProductId === p.id ? 'btn-success-added' : 'btn-outline'}`}
@@ -510,6 +627,7 @@ const ProductDetails = ({ user, addToCart }) => {
                       )}
                     </button>
                   </div>
+                </div>
                 </div>
               </div>
             ))}
