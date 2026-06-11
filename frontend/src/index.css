@@ -538,5 +538,70 @@ a {
   transform: scale(1.03);
 }
 
+/* Product Details Image Gallery Container */
+.details-image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 2px solid var(--border-highlight);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  z-index: 1;
+}
+
+.details-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Zoom effect on hover */
+.details-image-container:hover img {
+  transform: scale(1.1);
+}
+
+/* Nav arrows on details main image */
+.details-nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(10, 10, 10, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: all 0.25s ease;
+  opacity: 0;
+}
+
+.details-image-container:hover .details-nav-arrow {
+  opacity: 1;
+}
+
+.details-nav-arrow:hover {
+  background-color: var(--primary);
+  border-color: var(--primary);
+  box-shadow: 0 0 10px var(--primary-glow);
+  color: #fff;
+}
+
+.details-nav-arrow-left {
+  left: 15px;
+}
+
+.details-nav-arrow-right {
+  right: 15px;
+}
+
 
 

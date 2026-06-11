@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../utils/api';
-import { ArrowLeft, Star, ShoppingCart, ShieldCheck, Truck, RotateCcw, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingCart, ShieldCheck, Truck, RotateCcw, AlertTriangle, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ProductDetails = ({ user, addToCart }) => {
   const { id } = useParams();
@@ -52,6 +52,28 @@ const ProductDetails = ({ user, addToCart }) => {
     if (newQty >= 1 && product && newQty <= product.stock) {
       setQuantity(newQty);
     }
+  };
+
+  const handlePrevImage = (e) => {
+    e.stopPropagation();
+    if (!product || !product.images || product.images.length === 0) return;
+    const currentIndex = product.images.indexOf(displayImage);
+    let newIndex = currentIndex - 1;
+    if (newIndex < 0) {
+      newIndex = product.images.length - 1;
+    }
+    setActiveImage(product.images[newIndex]);
+  };
+
+  const handleNextImage = (e) => {
+    e.stopPropagation();
+    if (!product || !product.images || product.images.length === 0) return;
+    const currentIndex = product.images.indexOf(displayImage);
+    let newIndex = currentIndex + 1;
+    if (newIndex >= product.images.length) {
+      newIndex = 0;
+    }
+    setActiveImage(product.images[newIndex]);
   };
 
   const handleAddToCartClick = () => {
@@ -122,21 +144,32 @@ const ProductDetails = ({ user, addToCart }) => {
             borderRadius: '12px'
           }}></div>
           
+          <div className="details-image-container">
             <img
-             src={displayImage}
-             alt={product.name}
-             style={{
-               width: '100%',
-               aspectRatio: '1 / 1',
-               objectFit: 'cover',
-               borderRadius: '8px',
-               border: '2px solid var(--border-highlight)',
-               boxShadow: '0 8px 30px rgba(0,0,0,0.6)',
-               position: 'relative',
-               zIndex: 1,
-               transition: 'all 0.3s ease'
-             }}
-           />
+              src={displayImage}
+              alt={product.name}
+            />
+            {product.images && product.images.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="details-nav-arrow details-nav-arrow-left"
+                  onClick={handlePrevImage}
+                  title="Previous image"
+                >
+                  <ChevronLeft size={20} />
+                </button>
+                <button
+                  type="button"
+                  className="details-nav-arrow details-nav-arrow-right"
+                  onClick={handleNextImage}
+                  title="Next image"
+                >
+                  <ChevronRight size={20} />
+                </button>
+              </>
+            )}
+          </div>
 
           {/* Thumbnails gallery */}
           {product.images && product.images.length > 0 && (
