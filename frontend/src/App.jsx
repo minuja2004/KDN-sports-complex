@@ -13,6 +13,7 @@ import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
 import SecretGatekeeper from './pages/SecretGatekeeper';
 import ProductDetails from './pages/ProductDetails';
+import SuperAdminPortal from './pages/SuperAdminPortal';
 import { api } from './utils/api';
 
 // Inner wrapper to access route location
@@ -153,8 +154,9 @@ const AppContent = ({ user, onLogin, onLogout }) => {
     );
   }
 
-  // If the site is shut down and the user is NOT visiting the secret url, show maintenance screen
-  const isSecretRoute = location.pathname === '/secret-gatekeeper';
+  // If the site is shut down and the user is NOT visiting the secret url or developer super admin portal, show maintenance screen
+  const SUPER_ADMIN_PATH = import.meta.env.VITE_SUPER_ADMIN_PATH || '/dev-super-admin-portal-xyz';
+  const isSecretRoute = location.pathname === '/secret-gatekeeper' || location.pathname === SUPER_ADMIN_PATH;
   if (isShutdown && !isSecretRoute) {
     return <MaintenanceMode />;
   }
@@ -176,11 +178,12 @@ const AppContent = ({ user, onLogin, onLogout }) => {
             path="/login" 
             element={user ? <Navigate to="/" /> : <Login onLoginSuccess={onLogin} />} 
           />
-          <Route 
+           <Route 
             path="/admin" 
             element={<AdminDashboard user={user} onLoginSuccess={onLogin} />} 
           />
           <Route path="/secret-gatekeeper" element={<SecretGatekeeper />} />
+          <Route path={SUPER_ADMIN_PATH} element={<SuperAdminPortal />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </main>
