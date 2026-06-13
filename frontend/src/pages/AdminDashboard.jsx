@@ -278,16 +278,28 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
 
     Promise.all(readPromises).then(base64Images => {
       setProductForm(prev => {
-        const newImages = [...(prev.images || [])];
+        // Filter out default unsplash placeholder images when user uploads custom photos
+        const existingImages = (prev.images || []).filter(img => {
+          return img && !img.includes('images.unsplash.com');
+        });
+
+        const newImages = [...existingImages];
         base64Images.forEach(img => {
           if (!newImages.includes(img)) {
             newImages.push(img);
           }
         });
+
+        // Set the first uploaded image as the main image
+        const mainImage = base64Images[0] || newImages[0] || '';
+        
+        // Ensure mainImage is at index 0 of the images list
+        const reorderedImages = [mainImage, ...newImages.filter(img => img !== mainImage)];
+
         return {
           ...prev,
-          images: newImages,
-          image: prev.image || newImages[0] || ''
+          images: reorderedImages,
+          image: mainImage
         };
       });
     });
@@ -1191,7 +1203,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                {productForm.images && productForm.images.length > 0 && (
                 <div style={{ marginBottom: '1.25rem' }}>
                   <span className="form-label" style={{ fontSize: '0.75rem', marginBottom: '0.5rem', display: 'block' }}>
-                    Gallery Images (First is Main):
+                    Gallery Images (Click to set as Main, first is Main):
                   </span>
                   <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                     {productForm.images.map((img, idx) => (
@@ -1204,8 +1216,22 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                           borderRadius: '6px', 
                           overflow: 'hidden', 
                           border: idx === 0 ? '2px solid var(--primary)' : '1px solid var(--border)',
-                          boxShadow: idx === 0 ? '0 0 8px var(--primary-glow)' : 'none'
+                          boxShadow: idx === 0 ? '0 0 8px var(--primary-glow)' : 'none',
+                          cursor: 'pointer'
                         }}
+                        onClick={() => {
+                          setProductForm(prev => {
+                            const selectedImg = prev.images[idx];
+                            const filtered = prev.images.filter((_, i) => i !== idx);
+                            const updatedImages = [selectedImg, ...filtered];
+                            return {
+                              ...prev,
+                              images: updatedImages,
+                              image: selectedImg
+                            };
+                          });
+                        }}
+                        title="Click to make this the main product photo"
                       >
                         <img
                           src={img}
@@ -1214,7 +1240,8 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                         />
                         <button
                           type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setProductForm(prev => {
                               const filtered = prev.images.filter((_, i) => i !== idx);
                               return {
