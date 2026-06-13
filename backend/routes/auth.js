@@ -74,6 +74,10 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
+    if (user.isActive === false) {
+      return res.status(403).json({ message: 'Access Denied: This account has been deactivated by a Super Admin.' });
+    }
+
     const isMatch = bcrypt.compareSync(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
@@ -106,6 +110,10 @@ router.get('/profile', verifyToken, async (req, res) => {
     const user = await Users.findById(req.user.id);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.isActive === false) {
+      return res.status(403).json({ message: 'Access Denied: Account deactivated.' });
     }
 
     res.json({

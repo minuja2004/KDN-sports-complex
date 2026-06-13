@@ -28,6 +28,7 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/physio', require('./routes/physio'));
 app.use('/api/secret', require('./routes/secretAdmin'));
+app.use('/api/flyers', require('./routes/flyers'));
 
 // Public healthcheck
 app.get('/health', (req, res) => {

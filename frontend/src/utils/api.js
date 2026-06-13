@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
 
 // Intercepts and sets up request parameters
 const request = async (endpoint, options = {}) => {
@@ -16,9 +16,9 @@ const request = async (endpoint, options = {}) => {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  // Inject secret admin token if calling secret endpoints
+  // Inject secret admin token if calling secret endpoints or flyers
   const secretToken = localStorage.getItem('kdn_secret_token');
-  if (endpoint.startsWith('/secret') && secretToken) {
+  if (secretToken && (endpoint.startsWith('/secret') || endpoint.startsWith('/flyers'))) {
     headers['Authorization'] = `Bearer ${secretToken}`;
   }
 
@@ -159,6 +159,23 @@ export const api = {
     toggleShutdown: (shutdown) => request('/secret/toggle-shutdown', {
       method: 'POST',
       body: JSON.stringify({ shutdown })
+    }),
+    getUsers: () => request('/secret/users'),
+    updateUserStatus: (id, isActive) => request(`/secret/users/${id}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ isActive })
+    })
+  },
+
+  // Promotional Flyers Management
+  flyers: {
+    getAll: () => request('/flyers'),
+    create: (flyerData) => request('/flyers', {
+      method: 'POST',
+      body: JSON.stringify(flyerData)
+    }),
+    delete: (id) => request(`/flyers/${id}`, {
+      method: 'DELETE'
     })
   }
 };

@@ -9,6 +9,12 @@ const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'secretadmin@kdnspo
 
 // Middleware to verify secret admin token
 const verifySecretAdminToken = (req, res, next) => {
+  // If in local development, bypass token verification for ease of use
+  if (process.env.NODE_ENV !== 'production') {
+    req.secretAdmin = { email: 'dev-admin-bypass@kdnsport.com', role: 'secret_admin' };
+    return next();
+  }
+
   const authHeader = req.headers['authorization'];
   if (!authHeader) {
     return res.status(401).json({ message: 'Secret Admin authorization token required.' });
@@ -189,6 +195,56 @@ router.post('/toggle-shutdown', verifySecretAdminToken, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: 'Error updating site shutdown state.', error: err.message });
+  }
+});
+
+// GET /api/secret/users - Get all system users (admins and customers)
+router.get('/users', verifySecretAdminToken, async (req, res) => {
+  try {
+    const { Users } = require('../config/db');
+    const allUsers = await Users.find();
+    
+    // Format list, exclude passwords
+    const formatted = allUsers.map(u => ({
+      id: u.id,
+      username: u.username,
+      email: u.email,
+      role: u.role,
+      isActive: u.isActive !== false,
+      createdAt: u.createdAt
+    }));
+    
+    res.json(formatted);
+  } catch (err) {
+    res.status(500).json({ message: 'Error retrieving users list.', error: err.message });
+  }
+});
+
+// PUT /api/secret/users/:id/status - Toggle active/deactive status of a user/admin
+router.put('/users/:id/status', verifySecretAdminToken, async (req, res) => {
+  const { id } = req.params;
+  const { isActive } = req.body;
+
+  if (isActive === undefined) {
+    return res.status(400).json({ message: 'isActive status parameter is required.' });
+  }
+
+  try {
+    const { Users } = require('../config/db');
+    
+    const user = await Users.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: 'User account not found.' });
+    }
+
+    await Users.findByIdAndUpdate(id, { isActive: isActive === true });
+
+    res.json({
+      success: true,
+      message: `Account status successfully updated to ${isActive ? 'Active' : 'Deactivated'}.`
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating user account status.', error: err.message });
   }
 });
 

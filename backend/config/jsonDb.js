@@ -102,6 +102,7 @@ const initDbFile = () => {
         }
       ],
       orders: [],
+      flyers: [],
       systemConfig: {
         isShutdown: false,
         secretAdminOtp: null,
@@ -231,6 +232,7 @@ module.exports = {
   GymMembers: getCollection('gymMembers'),
   Products: getCollection('products'),
   Orders: getCollection('orders'),
+  Flyers: getCollection('flyers'),
   SystemConfig: {
     get: () => {
       const db = readDb();

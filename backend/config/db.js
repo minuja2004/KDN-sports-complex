@@ -21,6 +21,7 @@ const UserSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, default: 'customer' },
+  isActive: { type: Boolean, default: true },
   createdAt: { type: String, default: () => new Date().toISOString() }
 });
 
@@ -96,6 +97,14 @@ const SystemConfigSchema = new mongoose.Schema({
   otpExpiry: String
 });
 
+const FlyerSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true },
+  title: { type: String, required: true },
+  image: { type: String, required: true },
+  link: { type: String, default: "" },
+  createdAt: { type: String, default: () => new Date().toISOString() }
+});
+
 // Compile Models
 const MongoUser = mongoose.models.User || mongoose.model('User', UserSchema);
 const MongoBooking = mongoose.models.Booking || mongoose.model('Booking', BookingSchema);
@@ -103,6 +112,7 @@ const MongoGymMember = mongoose.models.GymMember || mongoose.model('GymMember', 
 const MongoProduct = mongoose.models.Product || mongoose.model('Product', ProductSchema);
 const MongoOrder = mongoose.models.Order || mongoose.model('Order', OrderSchema);
 const MongoSystemConfig = mongoose.models.SystemConfig || mongoose.model('SystemConfig', SystemConfigSchema);
+const MongoFlyer = mongoose.models.Flyer || mongoose.model('Flyer', FlyerSchema);
 
 // Connection listener
 mongoose.connection.on('connected', async () => {
@@ -211,6 +221,7 @@ module.exports = {
   GymMembers: getAdapter('gymMembers', MongoGymMember, jsonDb.GymMembers),
   Products: getAdapter('products', MongoProduct, jsonDb.Products),
   Orders: getAdapter('orders', MongoOrder, jsonDb.Orders),
+  Flyers: getAdapter('flyers', MongoFlyer, jsonDb.Flyers),
   SystemConfig: {
     get: async () => {
       if (dbType === 'mongodb' && mongoose.connection.readyState === 1) {

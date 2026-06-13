@@ -26,11 +26,17 @@ const verifyToken = (req, res, next) => {
 
 // Verify admin role
 const verifyAdmin = (req, res, next) => {
-  verifyToken(req, res, () => {
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied. Admin role required.' });
+  verifyToken(req, res, async () => {
+    try {
+      const { Users } = require('../config/db');
+      const user = await Users.findById(req.user.id);
+      if (!user || user.role !== 'admin' || user.isActive === false) {
+        return res.status(403).json({ message: 'Access denied. Active Admin role required.' });
+      }
+      next();
+    } catch (err) {
+      res.status(500).json({ message: 'Error checking admin permissions.' });
     }
-    next();
   });
 };
 
