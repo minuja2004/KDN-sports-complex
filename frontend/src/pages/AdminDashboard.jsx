@@ -14,7 +14,19 @@ import {
   Plus, 
   X, 
   Package,
-  CheckCircle2
+  CheckCircle2,
+  Image as ImageIcon,
+  Users as UsersIcon,
+  Power,
+  Loader2,
+  Terminal,
+  ArrowLeft,
+  AlertTriangle,
+  Upload,
+  Link as LinkIcon,
+  UserX,
+  Search,
+  Filter
 } from 'lucide-react';
 
 const AdminDashboard = ({ user, onLoginSuccess }) => {
@@ -29,6 +41,31 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
   const [physios, setPhysios] = useState([]);
   const [products, setProducts] = useState([]);
   const [error, setError] = useState('');
+
+  // Flyers Form States
+  const [flyerTitle, setFlyerTitle] = useState('');
+  const [flyerLink, setFlyerLink] = useState('');
+  const [flyerImage, setFlyerImage] = useState('');
+  const [flyerImageType, setFlyerImageType] = useState('url'); // 'url' or 'file'
+  const [flyers, setFlyers] = useState([]);
+  const [loadingFlyers, setLoadingFlyers] = useState(false);
+  const [flyerSubmitLoading, setFlyerSubmitLoading] = useState(false);
+  const [flyerError, setFlyerError] = useState('');
+  const [flyerSuccess, setFlyerSuccess] = useState('');
+
+  // Users Management States
+  const [userList, setUserList] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [userError, setUserError] = useState('');
+  const [userSuccess, setUserSuccess] = useState('');
+
+  // Site Lockdown States
+  const [isShutdown, setIsShutdown] = useState(false);
+  const [lockdownLoading, setLockdownLoading] = useState(false);
+  const [lockdownError, setLockdownError] = useState('');
+  const [lockdownSuccess, setLockdownSuccess] = useState('');
 
   // Admin login states
   const [adminEmail, setAdminEmail] = useState('');
@@ -120,11 +157,174 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
       // Fetch store products
       const storeProducts = await api.products.getAll();
       setProducts(storeProducts);
+
+      // Fetch active flyers
+      try {
+        const activeFlyers = await api.flyers.getAll();
+        setFlyers(activeFlyers);
+      } catch (flyerErr) {
+        console.error('Failed to retrieve flyers:', flyerErr);
+      }
+
+      // Fetch lockdown status
+      try {
+        const status = await api.secret.checkShutdown();
+        setIsShutdown(status.isShutdown);
+      } catch (lockdownErr) {
+        console.error('Failed to load site lockdown status:', lockdownErr);
+      }
     } catch (err) {
       setError('Failed to fetch administration logs. Please check server authorization.');
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'users' && user && user.role === 'admin') {
+      fetchUsers();
+    }
+  }, [activeTab, user]);
+
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    setUserError('');
+    try {
+      const data = await api.secret.getUsers();
+      setUserList(data);
+    } catch (err) {
+      console.error('Failed to retrieve users:', err);
+      setUserError('Error loading user directory database.');
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setFlyerError('Image file is too large. Max size is 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFlyerImage(reader.result);
+      setFlyerError('');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSaveFlyer = async (e) => {
+    e.preventDefault();
+    if (!flyerTitle) {
+      setFlyerError('Flyer title is required.');
+      return;
+    }
+    if (!flyerImage) {
+      setFlyerError('Please provide a flyer image (upload file or paste URL).');
+      return;
+    }
+
+    setFlyerSubmitLoading(true);
+    setFlyerError('');
+    setFlyerSuccess('');
+
+    try {
+      const payload = {
+        title: flyerTitle,
+        image: flyerImage,
+        link: flyerLink
+      };
+      
+      const newFlyer = await api.flyers.create(payload);
+      setFlyers([newFlyer, ...flyers]);
+      
+      setFlyerTitle('');
+      setFlyerLink('');
+      setFlyerImage('');
+      setFlyerSuccess('Promotional flyer saved and published successfully!');
+      
+      setTimeout(() => setFlyerSuccess(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setFlyerError(err.message || 'Error occurred while saving the flyer.');
+    } finally {
+      setFlyerSubmitLoading(false);
+    }
+  };
+
+  const handleDeleteFlyer = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this flyer? This action cannot be undone.')) {
+      return;
+    }
+
+    setFlyerError('');
+    setFlyerSuccess('');
+
+    try {
+      await api.flyers.delete(id);
+      setFlyers(flyers.filter(f => f.id !== id));
+      setFlyerSuccess('Flyer removed successfully.');
+      setTimeout(() => setFlyerSuccess(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setFlyerError(err.message || 'Error deleting the flyer.');
+    }
+  };
+
+  const handleToggleUserStatus = async (userObj) => {
+    const nextStatus = !userObj.isActive;
+    const confirmMsg = nextStatus 
+      ? `Are you sure you want to reactivate the account for "${userObj.username}" (${userObj.email})?`
+      : `Are you sure you want to deactivate the account for "${userObj.username}" (${userObj.email})? Deactivated users cannot log in or perform administrative tasks.`;
+      
+    if (!window.confirm(confirmMsg)) return;
+
+    setUserError('');
+    setUserSuccess('');
+
+    try {
+      await api.secret.updateUserStatus(userObj.id, nextStatus);
+      setUserList(userList.map(u => u.id === userObj.id ? { ...u, isActive: nextStatus } : u));
+      setUserSuccess(`Successfully ${nextStatus ? 'reactivated' : 'deactivated'} "${userObj.username}"'s account.`);
+      setTimeout(() => setUserSuccess(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setUserError(err.message || 'Failed to update user status.');
+    }
+  };
+
+  const handleToggleLockdown = async (nextState) => {
+    if (nextState === true) {
+      if (!window.confirm('⚠️ CRITICAL WARNING: You are about to lock down the entire KDN Sport Complex website. This blocks all public badminton bookings, gym check-ins, supplement sales, and administrative dashboard access. Proceed?')) {
+        return;
+      }
+    }
+
+    setLockdownLoading(true);
+    setLockdownError('');
+    setLockdownSuccess('');
+
+    try {
+      const result = await api.secret.toggleShutdown(nextState);
+      setIsShutdown(result.isShutdown);
+      setLockdownSuccess(result.message);
+      
+      // Dispatch status shift event to immediately update local client layout
+      window.dispatchEvent(new CustomEvent('kdn-shutdown-state-changed', {
+        detail: { isShutdown: result.isShutdown }
+      }));
+
+      setTimeout(() => setLockdownSuccess(''), 4000);
+    } catch (err) {
+      console.error(err);
+      setLockdownError(err.message || 'Failed to update site lockdown status.');
+    } finally {
+      setLockdownLoading(false);
     }
   };
 
@@ -432,6 +632,18 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
     );
   }
 
+  const filteredUsers = userList.filter(userObj => {
+    const matchesSearch = 
+      userObj.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      userObj.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = 
+      roleFilter === 'all' || 
+      userObj.role === roleFilter;
+
+    return matchesSearch && matchesRole;
+  });
+
   return (
     <div className="container section animate-fade-in">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
@@ -496,6 +708,30 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
         >
           <Activity size={16} />
           Physio Consults ({physios.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('flyers')}
+          className={`btn ${activeTab === 'flyers' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}
+        >
+          <ImageIcon size={16} />
+          Promotional Flyers ({flyers.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('users')}
+          className={`btn ${activeTab === 'users' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}
+        >
+          <UsersIcon size={16} />
+          User Account Controls
+        </button>
+        <button
+          onClick={() => setActiveTab('lockdown')}
+          className={`btn ${activeTab === 'lockdown' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}
+        >
+          <Power size={16} />
+          Global Lockdown ({isShutdown ? 'OFFLINE' : 'ONLINE'})
         </button>
       </div>
 
@@ -861,6 +1097,575 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Tab 6: Promotional Flyers */}
+        {activeTab === 'flyers' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }} className="animate-fade-in">
+            {/* Create Flyer Form Card */}
+            <div className="card" style={{ backgroundColor: '#141416', border: '1px solid var(--border)', padding: '2rem', height: 'fit-content' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--primary)', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+                <ImageIcon size={22} />
+                <h3 style={{ fontSize: '1.3rem', fontFamily: 'Outfit', fontWeight: 600, color: '#fff', margin: 0 }}>Publish New Flyer</h3>
+              </div>
+
+              {flyerError && (
+                <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--error)', padding: '0.75rem', borderRadius: '6px', color: '#f87171', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
+                  {flyerError}
+                </div>
+              )}
+
+              {flyerSuccess && (
+                <div style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid #22c55e', padding: '0.75rem', borderRadius: '6px', color: '#4ade80', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
+                  {flyerSuccess}
+                </div>
+              )}
+
+              <form onSubmit={handleSaveFlyer} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                
+                {/* Flyer Title */}
+                <div className="form-group">
+                  <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem', display: 'block' }}>Flyer Title / Promotion Name</label>
+                  <input 
+                    type="text" 
+                    disabled={flyerSubmitLoading}
+                    placeholder="e.g. 25% Off Gym Memberships!"
+                    className="form-input" 
+                    value={flyerTitle} 
+                    onChange={(e) => setFlyerTitle(e.target.value)}
+                    style={{ width: '100%', backgroundColor: '#0d0d0f', border: '1px solid var(--border)', color: '#fff', padding: '0.75rem', borderRadius: '6px' }}
+                  />
+                </div>
+
+                {/* Flyer Link */}
+                <div className="form-group">
+                  <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem', display: 'block' }}>Redirect Path / Link (Optional)</label>
+                  <div style={{ position: 'relative' }}>
+                    <input 
+                      type="text" 
+                      disabled={flyerSubmitLoading}
+                      placeholder="e.g. /gym or /shop"
+                      className="form-input" 
+                      value={flyerLink} 
+                      onChange={(e) => setFlyerLink(e.target.value)}
+                      style={{ width: '100%', backgroundColor: '#0d0d0f', border: '1px solid var(--border)', color: '#fff', padding: '0.75rem 0.75rem 0.75rem 2.2rem', borderRadius: '6px' }}
+                    />
+                    <LinkIcon size={14} style={{ position: 'absolute', left: '12px', top: '15px', color: 'var(--text-muted)' }} />
+                  </div>
+                  <small className="text-muted" style={{ fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+                    Internal route where customers go when they click the flyer image.
+                  </small>
+                </div>
+
+                {/* Flyer Image Selection Toggles */}
+                <div className="form-group">
+                  <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.5rem', display: 'block' }}>Flyer Image Input Mode</label>
+                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '0.75rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                      <input 
+                        type="radio" 
+                        name="imgType" 
+                        value="url" 
+                        checked={flyerImageType === 'url'} 
+                        onChange={() => { setFlyerImageType('url'); setFlyerImage(''); }} 
+                      />
+                      Image URL Link
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                      <input 
+                        type="radio" 
+                        name="imgType" 
+                        value="file" 
+                        checked={flyerImageType === 'file'} 
+                        onChange={() => { setFlyerImageType('file'); setFlyerImage(''); }} 
+                      />
+                      Upload Image File
+                    </label>
+                  </div>
+
+                  {flyerImageType === 'url' ? (
+                    <div style={{ position: 'relative' }}>
+                      <input 
+                        type="text" 
+                        disabled={flyerSubmitLoading}
+                        placeholder="Paste image web URL..." 
+                        className="form-input" 
+                        value={flyerImage} 
+                        onChange={(e) => setFlyerImage(e.target.value)}
+                        style={{ width: '100%', backgroundColor: '#0d0d0f', border: '1px solid var(--border)', color: '#fff', padding: '0.75rem 0.75rem 0.75rem 2.2rem', borderRadius: '6px' }}
+                      />
+                      <ImageIcon size={14} style={{ position: 'absolute', left: '12px', top: '15px', color: 'var(--text-muted)' }} />
+                    </div>
+                  ) : (
+                    <div style={{ 
+                      border: '1px dashed var(--border)', 
+                      borderRadius: '8px', 
+                      padding: '1.5rem', 
+                      textAlign: 'center',
+                      backgroundColor: 'rgba(255,255,255,0.01)',
+                      position: 'relative',
+                      cursor: 'pointer'
+                    }}>
+                      <input 
+                        type="file" 
+                        disabled={flyerSubmitLoading}
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        style={{ 
+                          position: 'absolute', 
+                          top: 0, 
+                          left: 0, 
+                          width: '100%', 
+                          height: '100%', 
+                          opacity: 0, 
+                          cursor: 'pointer' 
+                        }} 
+                      />
+                      <Upload size={24} style={{ color: 'var(--text-muted)', marginBottom: '0.5rem' }} />
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>
+                        Click or drag file to upload flyer image
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {flyerImage && (
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>Flyer Image Preview:</span>
+                    <div style={{ 
+                      width: '100%', 
+                      maxHeight: '180px', 
+                      borderRadius: '6px', 
+                      border: '1px solid var(--border)', 
+                      overflow: 'hidden', 
+                      display: 'flex', 
+                      justifyContent: 'center', 
+                      alignItems: 'center',
+                      backgroundColor: '#000'
+                    }}>
+                      <img 
+                        src={flyerImage} 
+                        alt="Preview" 
+                        style={{ maxWidth: '100%', maxHeight: '180px', objectFit: 'contain' }}
+                        onError={() => setFlyerError('Unable to render image. Verify the URL link format.')}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Submit Button */}
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  disabled={flyerSubmitLoading}
+                  style={{ 
+                    marginTop: '1rem', 
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    width: '100%',
+                    fontWeight: 600
+                  }}
+                >
+                  {flyerSubmitLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Uploading & Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      Publish Flyer Banner
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* Active Flyers List Grid */}
+            <div className="card" style={{ backgroundColor: '#141416', border: '1px solid var(--border)', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#00e5ff' }}>
+                  <Terminal size={20} />
+                  <h3 style={{ fontSize: '1.3rem', fontFamily: 'Outfit', fontWeight: 600, color: '#fff', margin: 0 }}>Active Flyers</h3>
+                </div>
+                <span style={{ fontSize: '0.75rem', backgroundColor: 'rgba(0, 229, 255, 0.08)', border: '1px solid rgba(0, 229, 255, 0.2)', color: '#00e5ff', padding: '0.2rem 0.6rem', borderRadius: '9999px' }}>
+                  {flyers.length} Active
+                </span>
+              </div>
+
+              {loadingFlyers ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
+                  <Loader2 size={24} className="animate-spin" style={{ color: 'var(--primary)' }} />
+                  <span style={{ fontSize: '0.85rem' }}>Loading active flyers...</span>
+                </div>
+              ) : flyers.length === 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '4rem 0', textAlign: 'center' }}>
+                  <ImageIcon size={36} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
+                  <div>
+                    <h4 style={{ color: '#fff', fontSize: '1rem', margin: '0 0 0.25rem 0' }}>No Flyers Published</h4>
+                    <p className="text-muted" style={{ fontSize: '0.8rem', maxWidth: '280px', margin: 0 }}>
+                      Add special offer or discount banners to highlight ongoing promotions on the customer landing page.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto', maxHeight: '480px', paddingRight: '0.25rem' }}>
+                  {flyers.map(flyer => (
+                    <div key={flyer.id} style={{ 
+                      display: 'flex', 
+                      gap: '1rem', 
+                      padding: '1rem', 
+                      borderRadius: '8px', 
+                      backgroundColor: '#0d0d0f', 
+                      border: '1px solid var(--border)',
+                      alignItems: 'center'
+                    }}>
+                      <div style={{ 
+                        width: '80px', 
+                        height: '55px', 
+                        borderRadius: '4px', 
+                        overflow: 'hidden', 
+                        backgroundColor: '#000', 
+                        flexShrink: 0,
+                        border: '1px solid #1a1a1f'
+                      }}>
+                        <img src={flyer.image} alt={flyer.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#fff', margin: '0 0 0.2rem 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {flyer.title}
+                        </h4>
+                        {flyer.link ? (
+                          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', color: '#00e5ff' }}>
+                            <LinkIcon size={10} />
+                            <span>Link: {flyer.link}</span>
+                          </div>
+                        ) : (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>No Click Route Set</span>
+                        )}
+                      </div>
+
+                      <button 
+                        onClick={() => handleDeleteFlyer(flyer.id)}
+                        style={{ 
+                          backgroundColor: 'rgba(239, 68, 68, 0.08)', 
+                          border: '1px solid rgba(239, 68, 68, 0.2)', 
+                          color: '#ef4444', 
+                          padding: '0.5rem', 
+                          borderRadius: '6px', 
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 7: User Account Controls */}
+        {activeTab === 'users' && (
+          <div className="card animate-fade-in" style={{ backgroundColor: '#141416', border: '1px solid var(--border)', padding: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--primary)', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', marginBottom: '0.5rem' }}>
+              <UsersIcon size={24} />
+              <h3 style={{ fontSize: '1.4rem', fontFamily: 'Outfit', fontWeight: 600, color: '#fff', margin: 0 }}>Registered User Directory</h3>
+            </div>
+
+            {userError && (
+              <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--error)', padding: '0.75rem', borderRadius: '6px', color: '#f87171', fontSize: '0.85rem' }}>
+                {userError}
+              </div>
+            )}
+
+            {userSuccess && (
+              <div style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid #22c55e', padding: '0.75rem', borderRadius: '6px', color: '#4ade80', fontSize: '0.85rem' }}>
+                {userSuccess}
+              </div>
+            )}
+
+            {/* Filter Search Header */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
+              
+              {/* Search Field */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                backgroundColor: '#0d0d0f', 
+                border: '1px solid var(--border)', 
+                borderRadius: '6px', 
+                padding: '0.2rem 0.75rem', 
+                gap: '0.5rem',
+                minWidth: '280px',
+                flex: 1
+              }}>
+                <Search size={16} style={{ color: 'var(--text-muted)' }} />
+                <input 
+                  type="text" 
+                  placeholder="Search user profile name or email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#fff',
+                    outline: 'none',
+                    padding: '0.6rem 0',
+                    width: '100%',
+                    fontSize: '0.9rem'
+                  }}
+                />
+              </div>
+
+              {/* Role Selection Dropdown */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                  <Filter size={14} />
+                  <span>Role:</span>
+                </div>
+                <select 
+                  value={roleFilter} 
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                  style={{ 
+                    backgroundColor: '#0d0d0f', 
+                    border: '1px solid var(--border)', 
+                    color: '#fff', 
+                    padding: '0.6rem 2rem 0.6rem 0.75rem', 
+                    borderRadius: '6px', 
+                    fontSize: '0.9rem',
+                    cursor: 'pointer' 
+                  }}
+                >
+                  <option value="all">All Roles</option>
+                  <option value="admin">Administrators</option>
+                  <option value="customer">Customers</option>
+                </select>
+              </div>
+
+            </div>
+
+            {/* Users Directory Table */}
+            {usersLoading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center', padding: '5rem 0', color: 'var(--text-muted)' }}>
+                <Loader2 size={28} className="animate-spin" style={{ color: 'var(--primary)' }} />
+                <span style={{ fontSize: '0.9rem' }}>Querying database user profiles...</span>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '5rem 0', textAlign: 'center' }}>
+                <UserX size={40} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
+                <div>
+                  <h4 style={{ color: '#fff', fontSize: '1.05rem', margin: '0 0 0.25rem 0' }}>No Profiles Found</h4>
+                  <p className="text-muted" style={{ fontSize: '0.85rem', maxWidth: '320px', margin: 0 }}>
+                    No user accounts matched your search terms or filter selection.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto', border: '1px solid var(--border)', borderRadius: '8px', backgroundColor: '#0d0d0f' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: '#141416' }}>
+                      <th style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Username</th>
+                      <th style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Email Address</th>
+                      <th style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Account Role</th>
+                      <th style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600 }}>Status</th>
+                      <th style={{ padding: '1rem', fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 600, textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map(userObj => {
+                      const isRootAdmin = userObj.email.toLowerCase() === 'admin@kdnsport.com';
+                      return (
+                        <tr key={userObj.id} style={{ borderBottom: '1px solid #141416', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#101014'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
+                          <td style={{ padding: '1rem', color: '#fff', fontWeight: 500, fontSize: '0.9rem' }}>
+                            {userObj.username}
+                          </td>
+                          <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                            {userObj.email}
+                          </td>
+                          <td style={{ padding: '1rem' }}>
+                            {userObj.role === 'admin' ? (
+                              <span style={{ 
+                                backgroundColor: 'rgba(240, 129, 25, 0.08)', 
+                                border: '1px solid rgba(240, 129, 25, 0.2)', 
+                                color: 'var(--primary)', 
+                                padding: '0.2rem 0.6rem', 
+                                borderRadius: '9999px', 
+                                fontSize: '0.75rem', 
+                                fontWeight: 600 
+                              }}>
+                                Admin Staff
+                              </span>
+                            ) : (
+                              <span style={{ 
+                                backgroundColor: 'rgba(255, 255, 255, 0.03)', 
+                                border: '1px solid rgba(255, 255, 255, 0.08)', 
+                                color: 'var(--text-muted)', 
+                                padding: '0.2rem 0.6rem', 
+                                borderRadius: '9999px', 
+                                fontSize: '0.75rem' 
+                              }}>
+                                Customer
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '1rem' }}>
+                            {userObj.isActive ? (
+                              <span style={{ color: '#4ade80', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontWeight: 500 }}>
+                                <Check size={14} /> Active
+                              </span>
+                            ) : (
+                              <span style={{ color: '#f87171', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontWeight: 500 }}>
+                                <UserX size={14} /> Deactivated
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '1rem', textAlign: 'right' }}>
+                            {isRootAdmin ? (
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                Root Protected
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => handleToggleUserStatus(userObj)}
+                                style={{
+                                  backgroundColor: userObj.isActive ? 'rgba(239, 68, 68, 0.08)' : 'rgba(34, 197, 94, 0.08)',
+                                  border: userObj.isActive ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(34, 197, 94, 0.2)',
+                                  color: userObj.isActive ? '#f87171' : '#4ade80',
+                                  padding: '0.4rem 0.8rem',
+                                  borderRadius: '4px',
+                                  fontSize: '0.8rem',
+                                  cursor: 'pointer',
+                                  fontWeight: 600,
+                                  transition: 'all 0.2s'
+                                }}
+                              >
+                                {userObj.isActive ? 'Deactivate Account' : 'Reactivate Account'}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 8: Global Site Lockdown */}
+        {activeTab === 'lockdown' && (
+          <div className="card animate-fade-in" style={{ 
+            backgroundColor: '#141416', 
+            border: '1px solid var(--border)', 
+            padding: '2.5rem', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            gap: '2rem',
+            textAlign: 'center' 
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', color: 'var(--primary)' }}>
+              <ShieldAlert size={48} style={{ color: isShutdown ? '#ef4444' : '#22c55e' }} />
+              <h3 style={{ fontSize: '1.5rem', fontFamily: 'Outfit', fontWeight: 600, color: '#fff', margin: 0 }}>Global Website Shutdown controls</h3>
+              <p className="text-muted" style={{ fontSize: '0.9rem', maxWidth: '500px', margin: 0, lineHeight: '1.6' }}>
+                Manage emergency maintenance triggers. Setting status to Offline immediately blocks customers and normal administrators from accessing public interfaces.
+              </p>
+            </div>
+
+            {lockdownError && (
+              <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--error)', padding: '0.75rem', borderRadius: '6px', color: '#f87171', fontSize: '0.85rem' }}>
+                {lockdownError}
+              </div>
+            )}
+
+            {lockdownSuccess && (
+              <div style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid #22c55e', padding: '0.75rem', borderRadius: '6px', color: '#4ade80', fontSize: '0.85rem' }}>
+                {lockdownSuccess}
+              </div>
+            )}
+
+            {/* Current Status Box */}
+            <div style={{
+              backgroundColor: isShutdown ? 'rgba(239, 68, 68, 0.05)' : 'rgba(34, 197, 94, 0.05)',
+              border: isShutdown ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(34, 197, 94, 0.2)',
+              borderRadius: '8px',
+              padding: '2rem',
+              width: '100%',
+              maxWidth: '480px'
+            }}>
+              <span className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 600 }}>
+                Current Platform Status
+              </span>
+              <h2 style={{
+                fontSize: '2rem',
+                fontFamily: 'Outfit',
+                fontWeight: 800,
+                color: isShutdown ? '#f87171' : '#4ade80',
+                marginTop: '0.5rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                margin: '0.5rem 0'
+              }}>
+                <Power size={24} />
+                {isShutdown ? 'OFFLINE (SHUTDOWN)' : 'ONLINE (OPERATIONAL)'}
+              </h2>
+              <p className="text-muted" style={{ fontSize: '0.85rem', margin: 0, marginTop: '0.75rem', lineHeight: '1.5' }}>
+                {isShutdown 
+                  ? 'All checkout carts, badminton schedules, physiotherapy forms, and normal dashboards are locked. A maintenance screen is shown instead.'
+                  : 'Public pages are operational. Customers can purchase supplements and book slots. Administrators can manage inventories.'
+                }
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ width: '100%', maxWidth: '340px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {isShutdown ? (
+                <button
+                  onClick={() => handleToggleLockdown(false)}
+                  disabled={lockdownLoading}
+                  className="btn btn-primary"
+                  style={{ 
+                    width: '100%', 
+                    padding: '1rem', 
+                    backgroundColor: '#22c55e', 
+                    borderColor: '#22c55e',
+                    color: '#fff',
+                    fontWeight: 700
+                  }}
+                >
+                  {lockdownLoading ? 'Deactivating Shutdown...' : 'RESTORE SITE ONLINE'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleToggleLockdown(true)}
+                  disabled={lockdownLoading}
+                  className="btn btn-danger"
+                  style={{ 
+                    width: '100%', 
+                    padding: '1rem', 
+                    backgroundColor: '#ef4444', 
+                    borderColor: '#ef4444',
+                    color: '#fff',
+                    fontWeight: 700
+                  }}
+                >
+                  {lockdownLoading ? 'Activating Shutdown...' : '🚨 TRIGGER MASTER SHUTDOWN'}
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -136,11 +136,19 @@ const AppContent = ({ user, onLogin, onLogout }) => {
   }, []);
 
   const checkSiteStatus = async () => {
+    // Add a 5 second timeout for status check to prevent user lockout on server spin-up or cold-starts
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Connection timed out')), 5000)
+    );
+
     try {
-      const data = await api.secret.checkShutdown();
+      const data = await Promise.race([
+        api.secret.checkShutdown(),
+        timeoutPromise
+      ]);
       setIsShutdown(data.isShutdown);
     } catch (err) {
-      console.error('Failed to connect to backend for status check:', err.message);
+      console.warn('Backend status check bypassed/timed out:', err.message);
     } finally {
       setCheckingStatus(false);
     }

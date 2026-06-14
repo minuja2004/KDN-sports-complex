@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_kdn_jwt_token_key_123
 const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'secretadmin@kdnsport.com';
 
 // Custom middleware to verify the Developer Super Admin token
-const verifySecretAdminToken = (req, res, next) => {
+const verifySecretAdminToken = async (req, res, next) => {
   // If in local development, bypass token verification for ease of use
   if (process.env.NODE_ENV !== 'production') {
     return next();
@@ -16,19 +16,26 @@ const verifySecretAdminToken = (req, res, next) => {
 
   const authHeader = req.headers['authorization'];
   if (!authHeader) {
-    return res.status(401).json({ message: 'Secret Admin authorization token required.' });
+    return res.status(401).json({ message: 'Admin authorization token required.' });
   }
 
   const token = authHeader.split(' ')[1];
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.role !== 'secret_admin' || decoded.email !== SECRET_ADMIN_EMAIL) {
-      return res.status(403).json({ message: 'Forbidden: Invalid secret admin credentials.' });
+    if (decoded.role === 'secret_admin' && decoded.email === SECRET_ADMIN_EMAIL) {
+      req.secretAdmin = decoded;
+      return next();
+    } else if (decoded.role === 'admin') {
+      const { Users } = require('../config/db');
+      const user = await Users.findById(decoded.id);
+      if (user && user.role === 'admin' && user.isActive !== false) {
+        req.secretAdmin = { email: user.email, role: 'admin', id: user.id };
+        return next();
+      }
     }
-    req.secretAdmin = decoded;
-    next();
+    return res.status(403).json({ message: 'Forbidden: Invalid admin credentials.' });
   } catch (err) {
-    res.status(401).json({ message: 'Invalid or expired secret admin session.' });
+    res.status(401).json({ message: 'Invalid or expired admin session.' });
   }
 };
 
