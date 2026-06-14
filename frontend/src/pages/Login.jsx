@@ -3,6 +3,47 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
 import { LogIn, UserPlus, Mail, Lock, User, ShieldAlert, Phone } from 'lucide-react';
 
+const getPasswordStrength = (password) => {
+  if (!password) return { label: '', color: 'transparent', width: '0%', criteriaCount: 0 };
+  
+  let criteriaCount = 0;
+  const hasLength = password.length >= 6;
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasDigit = /\d/.test(password);
+  const hasSpecial = /[@$!%*?&]/.test(password);
+
+  if (hasLength) criteriaCount++;
+  if (hasLower) criteriaCount++;
+  if (hasUpper) criteriaCount++;
+  if (hasDigit) criteriaCount++;
+  if (hasSpecial) criteriaCount++;
+
+  let label = 'Very Weak';
+  let color = '#ef4444'; // red
+  let width = '20%';
+
+  if (criteriaCount === 5) {
+    label = 'Very Strong';
+    color = '#10b981'; // emerald green
+    width = '100%';
+  } else if (criteriaCount === 4) {
+    label = 'Strong';
+    color = '#22c55e'; // green
+    width = '80%';
+  } else if (criteriaCount === 3) {
+    label = 'Medium';
+    color = '#eab308'; // yellow/orange
+    width = '60%';
+  } else if (criteriaCount === 2) {
+    label = 'Weak';
+    color = '#ef4444'; // red
+    width = '40%';
+  }
+
+  return { label, color, width, criteriaCount };
+};
+
 const Login = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
@@ -19,6 +60,8 @@ const Login = ({ onLoginSuccess }) => {
   const [submitting, setSubmitting] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
+
+  const strength = getPasswordStrength(formData.password);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -47,10 +90,10 @@ const Login = ({ onLoginSuccess }) => {
           return;
         }
 
-        // Strong password regex check
-        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        // Strong password regex check (at least 6 characters, one uppercase, one lowercase, one number)
+        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
         if (!strongPasswordRegex.test(formData.password)) {
-          setError('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (e.g. @, $, !, %, *, ?, &).');
+          setError('Password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number.');
           setSubmitting(false);
           return;
         }
@@ -242,8 +285,15 @@ const Login = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          <div className="form-group" style={!isRegister ? { marginBottom: '2rem' } : undefined}>
-            <label className="form-label">Password</label>
+          <div className="form-group" style={!isRegister ? { marginBottom: '2rem' } : { marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <label className="form-label">Password</label>
+              {isRegister && formData.password && (
+                <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: strength.color }}>
+                  {strength.label}
+                </span>
+              )}
+            </div>
             <div style={{ position: 'relative' }}>
               <input
                 type="password"
@@ -258,6 +308,16 @@ const Login = ({ onLoginSuccess }) => {
               />
               <Lock size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
             </div>
+            {isRegister && formData.password && (
+              <div style={{ height: '4px', width: '100%', backgroundColor: '#222224', borderRadius: '2px', marginTop: '6px', overflow: 'hidden' }}>
+                <div style={{
+                  height: '100%',
+                  width: strength.width,
+                  backgroundColor: strength.color,
+                  transition: 'width 0.3s ease, background-color 0.3s ease'
+                }} />
+              </div>
+            )}
           </div>
 
           {isRegister && (

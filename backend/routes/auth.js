@@ -109,10 +109,10 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ message: 'Username, email, phone number, password, and OTP verification code are required.' });
   }
 
-  // Strong password check
-  const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  // Strong password check (at least 6 characters, one uppercase, one lowercase, one number)
+  const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
   if (!strongPasswordRegex.test(password)) {
-    return res.status(400).json({ message: 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.' });
+    return res.status(400).json({ message: 'Password must be at least 6 characters long and include at least one uppercase letter, one lowercase letter, and one number.' });
   }
 
   try {
