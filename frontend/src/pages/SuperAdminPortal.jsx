@@ -40,7 +40,8 @@ const SuperAdminPortal = () => {
   useEffect(() => {
     const secretToken = localStorage.getItem('kdn_secret_token');
     if (!secretToken) {
-      navigate('/secret-gatekeeper');
+      setHasSecretToken(false);
+      setLoading(false);
       return;
     }
     setHasSecretToken(true);
@@ -234,6 +235,46 @@ const SuperAdminPortal = () => {
 
     return matchesSearch && matchesRole;
   });
+
+  if (!hasSecretToken && !loading) {
+    return (
+      <div className="container section animate-fade-in" style={{ display: 'flex', justifyContent: 'center', minHeight: '60vh', alignItems: 'center' }}>
+        <div className="card card-accent" style={{
+          maxWidth: '480px',
+          width: '100%',
+          padding: '2.5rem',
+          backgroundColor: '#141416',
+          borderTopColor: '#ef4444',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            display: 'inline-flex',
+            padding: '1rem',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+            border: '1px dashed #ef4444',
+            color: '#ef4444',
+            marginBottom: '1.5rem'
+          }}>
+            <ShieldAlert size={48} />
+          </div>
+          <h2 style={{ fontFamily: 'Outfit', fontSize: '1.8rem', letterSpacing: '-0.02em', color: '#fff', marginBottom: '1rem' }}>
+            RESTRICTED SYSTEM ACCESS
+          </h2>
+          <p className="text-muted" style={{ fontSize: '0.9rem', lineHeight: '1.6', marginBottom: '2rem' }}>
+            This portal is restricted to the developer master console. Direct unauthenticated access is disabled. Please log in first.
+          </p>
+          <button 
+            onClick={() => navigate('/login')} 
+            className="btn btn-primary" 
+            style={{ width: '100%', padding: '1rem', backgroundColor: '#ef4444', borderColor: '#ef4444', color: '#fff', fontWeight: 700 }}
+          >
+            Go to Login Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container section animate-fade-in" style={{ paddingTop: '4rem', paddingBottom: '6rem' }}>
