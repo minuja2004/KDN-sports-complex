@@ -82,14 +82,15 @@ router.post('/request-otp', async (req, res) => {
   let emailSent = false;
 
   // 1. Try sending via Resend HTTP API first (Works on Render Free tier)
-  if (process.env.RESEND_API_KEY) {
+  const superResendKey = process.env.SUPER_ADMIN_RESEND_API_KEY || process.env.RESEND_API_KEY;
+  if (superResendKey) {
     try {
       const fromSender = process.env.RESEND_SENDER || 'onboarding@resend.dev';
       console.log(`Attempting to send Secret Admin email via Resend API...`);
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Authorization': `Bearer ${superResendKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({

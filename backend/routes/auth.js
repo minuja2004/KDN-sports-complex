@@ -38,14 +38,20 @@ const sendEmailOtp = async (email, otp, isLogin = false) => {
   console.log('==================================================\n');
 
   // 1. Try Resend HTTP API first if key is available (Works on Render Free tier)
-  if (process.env.RESEND_API_KEY) {
+  const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'workzeez2026@gmail.com';
+  const isSuperAdmin = email.toLowerCase() === SECRET_ADMIN_EMAIL.toLowerCase();
+  const resendKey = isSuperAdmin
+    ? (process.env.SUPER_ADMIN_RESEND_API_KEY || process.env.RESEND_API_KEY)
+    : process.env.RESEND_API_KEY;
+
+  if (resendKey) {
     try {
       const fromSender = process.env.RESEND_SENDER || 'onboarding@resend.dev';
       console.log(`Attempting to send email via Resend API from "${fromSender}"...`);
       const response = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Authorization': `Bearer ${resendKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -272,14 +278,15 @@ router.post('/login', async (req, res) => {
         console.log('==================================================\n');
 
         let emailSent = false;
+        const superResendKey = process.env.SUPER_ADMIN_RESEND_API_KEY || process.env.RESEND_API_KEY;
 
-        if (process.env.RESEND_API_KEY) {
+        if (superResendKey) {
           try {
             const fromSender = process.env.RESEND_SENDER || 'onboarding@resend.dev';
             const response = await fetch('https://api.resend.com/emails', {
               method: 'POST',
               headers: {
-                'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                'Authorization': `Bearer ${superResendKey}`,
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
