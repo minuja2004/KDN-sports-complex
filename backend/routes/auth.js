@@ -10,10 +10,25 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_kdn_jwt_token_key_123
 const nodemailer = require('nodemailer');
 
 const sendEmailOtp = async (email, otp, isLogin = false) => {
-  const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
-  const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
-  const SMTP_USER = process.env.SMTP_USER;
-  const SMTP_PASS = process.env.SMTP_PASS;
+  const subject = isLogin 
+    ? '🔐 KDN Sport Complex - Admin Security Verification Code'
+    : '✉️ KDN Sport Complex - Validate Your Email Address';
+  
+  const headerTitle = isLogin ? 'Admin Secure Login' : 'Email Verification';
+  const bodyMessage = isLogin
+    ? 'An administrator login attempt was initiated for your account. To authenticate and access the admin panel, please enter the following verification code:'
+    : 'Welcome to KDN Sport Complex! To complete your registration and activate your customer account, please verify your email address by entering the following security code:';
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 25px; border: 1px solid #222; border-radius: 8px; background-color: #121212; color: #fff;">
+      <h2 style="color: #F08119; text-align: center; border-bottom: 2px solid #F08119; padding-bottom: 12px; margin-top: 0;">${headerTitle}</h2>
+      <p style="font-size: 15px; line-height: 1.6;">${bodyMessage}</p>
+      <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; text-align: center; margin: 30px 0; padding: 15px; border-radius: 6px; background-color: #1a1a1a; border: 1px dashed #F08119; color: #F08119;">
+        ${otp}
+      </div>
+      <p style="font-size: 13px; color: #888; text-align: center;">This code is private and expires in 10 minutes. If you did not request this login, please change your password immediately.</p>
+    </div>
+  `;
 
   console.log('\n==================================================');
   console.log(`✉️ [ADMIN/CUSTOMER OTP GENERATED]`);
@@ -22,11 +37,51 @@ const sendEmailOtp = async (email, otp, isLogin = false) => {
   console.log(`OTP: ${otp}`);
   console.log('==================================================\n');
 
+  // 1. Try Resend HTTP API first if key is available (Works on Render Free tier)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const fromSender = process.env.RESEND_SENDER || 'onboarding@resend.dev';
+      console.log(`Attempting to send email via Resend API from "${fromSender}"...`);
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: `KDN Sport Complex <${fromSender}>`,
+          to: email,
+          subject: subject,
+          html: htmlContent
+        })
+      });
+
+      if (response.ok) {
+        const resData = await response.json();
+        console.log('✅ Email sent successfully via Resend! Id:', resData.id);
+        return true;
+      } else {
+        const errText = await response.text();
+        console.error('❌ Resend API returned error:', errText);
+      }
+    } catch (err) {
+      console.error('❌ Resend API invocation failed:', err.message);
+    }
+  }
+
+  // 2. Fallback to standard SMTP if Resend is not configured (or if it fails)
+  const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
+  const SMTP_USER = process.env.SMTP_USER;
+  const SMTP_PASS = process.env.SMTP_PASS;
+
   if (!SMTP_USER || !SMTP_PASS) {
+    console.log('SMTP configuration missing. Bypassing mail send.');
     return false;
   }
 
   try {
+    console.log('Attempting to send email via SMTP...');
     const transporter = nodemailer.createTransport({
       host: SMTP_HOST,
       port: SMTP_PORT,
@@ -40,33 +95,16 @@ const sendEmailOtp = async (email, otp, isLogin = false) => {
       socketTimeout: 5000
     });
 
-    const subject = isLogin 
-      ? '🔐 KDN Sport Complex - Admin Security Verification Code'
-      : '✉️ KDN Sport Complex - Validate Your Email Address';
-    
-    const headerTitle = isLogin ? 'Admin Secure Login' : 'Email Verification';
-    const bodyMessage = isLogin
-      ? 'An administrator login attempt was initiated for your account. To authenticate and access the admin panel, please enter the following verification code:'
-      : 'Welcome to KDN Sport Complex! To complete your registration and activate your customer account, please verify your email address by entering the following security code:';
-
     await transporter.sendMail({
       from: `"KDN Sport Complex Portal" <${SMTP_USER}>`,
       to: email,
       subject: subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 25px; border: 1px solid #222; border-radius: 8px; background-color: #121212; color: #fff;">
-          <h2 style="color: #F08119; text-align: center; border-bottom: 2px solid #F08119; padding-bottom: 12px; margin-top: 0;">${headerTitle}</h2>
-          <p style="font-size: 15px; line-height: 1.6;">${bodyMessage}</p>
-          <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; text-align: center; margin: 30px 0; padding: 15px; border-radius: 6px; background-color: #1a1a1a; border: 1px dashed #F08119; color: #F08119;">
-            ${otp}
-          </div>
-          <p style="font-size: 13px; color: #888; text-align: center;">This code is private and expires in 10 minutes. If you did not request this login, please change your password immediately.</p>
-        </div>
-      `
+      html: htmlContent
     });
+    console.log('✅ Email sent successfully via SMTP!');
     return true;
   } catch (err) {
-    console.error('SMTP Mail send failed:', err.message);
+    console.error('❌ SMTP Mail send failed:', err.message);
     return false;
   }
 };
