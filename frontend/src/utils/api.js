@@ -30,7 +30,10 @@ const request = async (endpoint, options = {}) => {
 
   // Inject secret admin token if calling secret endpoints or flyers
   const secretToken = localStorage.getItem('kdn_secret_token');
-  if (secretToken && (endpoint.startsWith('/secret') || endpoint.startsWith('/flyers'))) {
+  const isSuperAdminPath = typeof window !== 'undefined' && 
+    (window.location.pathname === '/secret-gatekeeper' || window.location.pathname === (import.meta.env.VITE_SUPER_ADMIN_PATH || '/dev-super-admin-portal-xyz'));
+
+  if (secretToken && (endpoint.startsWith('/secret') || endpoint.startsWith('/flyers')) && (isSuperAdminPath || !token)) {
     headers['Authorization'] = `Bearer ${secretToken}`;
   }
 
