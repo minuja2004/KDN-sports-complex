@@ -5,7 +5,7 @@ const cloudinary = require('../config/cloudinary');
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_kdn_jwt_token_key_12345';
-const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'secretadmin@kdnsport.com';
+const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'workzeez2026@gmail.com';
 
 // Custom middleware to verify the Developer Super Admin token
 const verifySecretAdminToken = async (req, res, next) => {

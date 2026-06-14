@@ -5,7 +5,7 @@ const nodemailer = require('nodemailer');
 const { SystemConfig } = require('../config/db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_kdn_jwt_token_key_12345';
-const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'secretadmin@kdnsport.com';
+const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'workzeez2026@gmail.com';
 
 // Middleware to verify secret admin token
 const verifySecretAdminToken = async (req, res, next) => {
@@ -52,14 +52,19 @@ router.get('/status', async (req, res) => {
 
 // POST /api/secret/request-otp - Send OTP to secret admin email
 router.post('/request-otp', async (req, res) => {
-  const { email } = req.body;
+  const { email, password } = req.body;
 
-  if (!email) {
-    return res.status(400).json({ message: 'Email address is required.' });
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required.' });
   }
 
   if (email.toLowerCase() !== SECRET_ADMIN_EMAIL.toLowerCase()) {
     return res.status(403).json({ message: 'Access Denied: Email is not whitelisted as a Secret Admin.' });
+  }
+
+  const SECRET_ADMIN_PASSWORD = process.env.SECRET_ADMIN_PASSWORD || 'Minuja@200430800186';
+  if (password !== SECRET_ADMIN_PASSWORD) {
+    return res.status(403).json({ message: 'Access Denied: Invalid security credentials.' });
   }
 
   // Generate 6-digit OTP
@@ -82,8 +87,49 @@ router.post('/request-otp', async (req, res) => {
 
   let emailSent = false;
 
-  // Try sending via SMTP if config exists
-  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+  // 1. Try sending via Resend HTTP API first (Works on Render Free tier)
+  if (process.env.RESEND_API_KEY) {
+    try {
+      const fromSender = process.env.RESEND_SENDER || 'onboarding@resend.dev';
+      console.log(`Attempting to send Secret Admin email via Resend API...`);
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: `KDN Sport Complex Control <${fromSender}>`,
+          to: email,
+          subject: '🔒 KDN Sport Complex - Secret Admin Verification Code',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #333; border-radius: 8px; background-color: #121212; color: #fff;">
+              <h2 style="color: #F08119; text-align: center; border-bottom: 2px solid #F08119; padding-bottom: 10px;">Security Access Verification</h2>
+              <p>A request was made to access the <strong>KDN Sport Complex Master Shutdown Panel</strong> using your whitelisted email.</p>
+              <p>Use the following verification code to log in. This code is valid for 5 minutes.</p>
+              <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; text-align: center; margin: 30px 0; padding: 15px; border-radius: 4px; background-color: #1e1e1e; border: 1px dashed #F08119; color: #F08119;">
+                ${otp}
+              </div>
+              <p style="color: #ff4444; font-size: 12px; text-align: center;">If you did not request this code, please secure your email account immediately.</p>
+            </div>
+          `
+        })
+      });
+
+      if (response.ok) {
+        console.log('✅ Secret Admin email sent successfully via Resend!');
+        emailSent = true;
+      } else {
+        const errText = await response.text();
+        console.error('❌ Resend API returned error:', errText);
+      }
+    } catch (err) {
+      console.error('❌ Resend API invocation failed:', err.message);
+    }
+  }
+
+  // 2. Try sending via SMTP if Resend is not configured (or if it fails)
+  if (!emailSent && process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     try {
       const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST,
@@ -92,7 +138,10 @@ router.post('/request-otp', async (req, res) => {
         auth: {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS
-        }
+        },
+        connectionTimeout: 5000,
+        greetingTimeout: 5000,
+        socketTimeout: 5000
       });
 
       await transporter.sendMail({

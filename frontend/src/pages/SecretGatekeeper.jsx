@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../utils/api';
-import { ShieldAlert, Mail, Lock, CheckCircle, RefreshCw, LogOut, Terminal, Power } from 'lucide-react';
+import { ShieldAlert, Mail, Lock, CheckCircle, RefreshCw, LogOut, Terminal, Power, Eye, EyeOff } from 'lucide-react';
 
 const SecretGatekeeper = () => {
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('workzeez2026@gmail.com');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: Dashboard
   const [isShutdown, setIsShutdown] = useState(false);
@@ -31,14 +33,14 @@ const SecretGatekeeper = () => {
 
   const handleRequestOtp = async (e) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !password) return;
 
     setLoading(true);
     setError('');
     setMessage('');
 
     try {
-      const result = await api.secret.requestOtp(email);
+      const result = await api.secret.requestOtp(email, password);
       setMessage(result.message);
       setStep(2);
     } catch (err) {
@@ -95,7 +97,8 @@ const SecretGatekeeper = () => {
   const handleSecretLogout = () => {
     localStorage.removeItem('kdn_secret_token');
     setStep(1);
-    setEmail('');
+    setEmail('workzeez2026@gmail.com');
+    setPassword('');
     setOtp('');
     setError('');
     setMessage('');
@@ -154,7 +157,7 @@ const SecretGatekeeper = () => {
                   type="email"
                   required
                   className="form-input"
-                  placeholder="admin-secret@kdnsport.com"
+                  placeholder="workzeez2026@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={{ paddingLeft: '2.5rem' }}
@@ -162,9 +165,43 @@ const SecretGatekeeper = () => {
                 <Mail size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
               </div>
             </div>
+
+            <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+              <label className="form-label">Master Password</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="form-input"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
+                />
+                <Lock size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '12px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    padding: 0,
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
             
             <button type="submit" className="btn btn-danger" style={{ width: '100%', backgroundColor: '#ef4444' }} disabled={loading}>
-              {loading ? 'Validating Whitelist...' : 'Request Verification OTP'}
+              {loading ? 'Validating Credentials...' : 'Request Verification OTP'}
             </button>
           </form>
         )}

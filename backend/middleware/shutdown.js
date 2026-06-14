@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const { SystemConfig } = require('../config/db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_kdn_jwt_token_key_12345';
-const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'secretadmin@kdnsport.com';
+const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'workzeez2026@gmail.com';
 
 const shutdownMiddleware = async (req, res, next) => {
   const config = await SystemConfig.get();

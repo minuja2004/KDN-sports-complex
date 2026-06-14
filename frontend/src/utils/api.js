@@ -167,9 +167,9 @@ export const api = {
   // Secret Admin (Master Shutdown Control)
   secret: {
     checkShutdown: () => request('/secret/status'),
-    requestOtp: (email) => request('/secret/request-otp', {
+    requestOtp: (email, password) => request('/secret/request-otp', {
       method: 'POST',
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email, password })
     }),
     verifyOtp: (email, otp) => request('/secret/verify-otp', {
       method: 'POST',

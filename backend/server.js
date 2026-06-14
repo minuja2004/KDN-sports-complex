@@ -39,7 +39,7 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
   console.log('==================================================');
   console.log(`🚀 KDN Sport Complex Server running on port ${PORT}`);
-  console.log(`Admin Whitelist Email: ${process.env.SECRET_ADMIN_EMAIL || 'secretadmin@kdnsport.com'}`);
+  console.log(`Admin Whitelist Email: ${process.env.SECRET_ADMIN_EMAIL || 'workzeez2026@gmail.com'}`);
   console.log(`Verify site online status at: http://localhost:${PORT}/api/secret/status`);
   console.log('==================================================');
 });
