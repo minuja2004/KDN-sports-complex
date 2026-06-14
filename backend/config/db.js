@@ -105,6 +105,12 @@ const FlyerSchema = new mongoose.Schema({
   createdAt: { type: String, default: () => new Date().toISOString() }
 });
 
+const OtpVerificationSchema = new mongoose.Schema({
+  email: { type: String, required: true },
+  otp: { type: String, required: true },
+  otpExpiry: { type: String, required: true }
+});
+
 // Compile Models
 const MongoUser = mongoose.models.User || mongoose.model('User', UserSchema);
 const MongoBooking = mongoose.models.Booking || mongoose.model('Booking', BookingSchema);
@@ -113,6 +119,7 @@ const MongoProduct = mongoose.models.Product || mongoose.model('Product', Produc
 const MongoOrder = mongoose.models.Order || mongoose.model('Order', OrderSchema);
 const MongoSystemConfig = mongoose.models.SystemConfig || mongoose.model('SystemConfig', SystemConfigSchema);
 const MongoFlyer = mongoose.models.Flyer || mongoose.model('Flyer', FlyerSchema);
+const MongoOtpVerification = mongoose.models.OtpVerification || mongoose.model('OtpVerification', OtpVerificationSchema);
 
 // Connection listener
 mongoose.connection.on('connected', async () => {
@@ -222,6 +229,7 @@ module.exports = {
   Products: getAdapter('products', MongoProduct, jsonDb.Products),
   Orders: getAdapter('orders', MongoOrder, jsonDb.Orders),
   Flyers: getAdapter('flyers', MongoFlyer, jsonDb.Flyers),
+  OtpVerifications: getAdapter('otpVerifications', MongoOtpVerification, jsonDb.OtpVerifications),
   SystemConfig: {
     get: async () => {
       if (dbType === 'mongodb' && mongoose.connection.readyState === 1) {

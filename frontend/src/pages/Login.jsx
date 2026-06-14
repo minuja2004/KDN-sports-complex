@@ -13,7 +13,10 @@ const Login = ({ onLoginSuccess }) => {
     role: 'customer' // customer or admin (for ease of local testing)
   });
   const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otp, setOtp] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -23,6 +26,7 @@ const Login = ({ onLoginSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setInfoMessage('');
     setSubmitting(true);
 
     try {
@@ -33,12 +37,28 @@ const Login = ({ onLoginSuccess }) => {
           setSubmitting(false);
           return;
         }
-        result = await api.auth.register(
-          formData.username,
-          formData.email,
-          formData.password,
-          formData.role
-        );
+        if (!otpSent) {
+          // Request OTP
+          const response = await api.auth.requestRegisterOtp(formData.email);
+          setOtpSent(true);
+          setInfoMessage(response.message || 'Verification code sent to your email.');
+          setSubmitting(false);
+          return;
+        } else {
+          // Verify & Register
+          if (!otp) {
+            setError('Please enter the verification code.');
+            setSubmitting(false);
+            return;
+          }
+          result = await api.auth.register(
+            formData.username,
+            formData.email,
+            formData.password,
+            formData.role,
+            otp
+          );
+        }
       } else {
         if (!formData.email || !formData.password) {
           setError('Email and password are required.');
@@ -72,7 +92,7 @@ const Login = ({ onLoginSuccess }) => {
         {/* Toggle tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '2rem' }}>
           <button
-            onClick={() => { setIsRegister(false); setError(''); }}
+            onClick={() => { setIsRegister(false); setError(''); setInfoMessage(''); setOtpSent(false); setOtp(''); }}
             style={{
               flex: 1,
               background: 'none',
@@ -88,7 +108,7 @@ const Login = ({ onLoginSuccess }) => {
             Sign In
           </button>
           <button
-            onClick={() => { setIsRegister(true); setError(''); }}
+            onClick={() => { setIsRegister(true); setError(''); setInfoMessage(''); setOtpSent(false); setOtp(''); }}
             style={{
               flex: 1,
               background: 'none',
@@ -129,6 +149,21 @@ const Login = ({ onLoginSuccess }) => {
           </div>
         )}
 
+        {infoMessage && (
+          <div style={{
+            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+            border: '1px solid #22c55e',
+            padding: '0.75rem',
+            borderRadius: '6px',
+            color: '#4ade80',
+            fontSize: '0.85rem',
+            marginBottom: '1.5rem',
+            textAlign: 'center'
+          }}>
+            {infoMessage}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           {isRegister && (
             <div className="form-group">
@@ -138,6 +173,7 @@ const Login = ({ onLoginSuccess }) => {
                   type="text"
                   name="username"
                   required
+                  disabled={otpSent}
                   className="form-input"
                   placeholder="Username"
                   value={formData.username}
@@ -156,6 +192,7 @@ const Login = ({ onLoginSuccess }) => {
                 type="email"
                 name="email"
                 required
+                disabled={otpSent}
                 className="form-input"
                 placeholder="you@example.com"
                 value={formData.email}
@@ -166,13 +203,14 @@ const Login = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: '2rem' }}>
+          <div className="form-group" style={{ marginBottom: isRegister && otpSent ? '1rem' : '2rem' }}>
             <label className="form-label">Password</label>
             <div style={{ position: 'relative' }}>
               <input
                 type="password"
                 name="password"
                 required
+                disabled={otpSent}
                 className="form-input"
                 placeholder="••••••••"
                 value={formData.password}
@@ -183,10 +221,38 @@ const Login = ({ onLoginSuccess }) => {
             </div>
           </div>
 
+          {isRegister && otpSent && (
+            <div className="form-group animate-fade-in" style={{ marginBottom: '2rem' }}>
+              <label className="form-label" style={{ color: 'var(--primary)', fontWeight: 'bold' }}>Verification Code</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter 6-digit OTP code"
+                  className="form-input"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  style={{ paddingLeft: '2.5rem', borderColor: 'var(--primary)', boxShadow: '0 0 5px rgba(240, 129, 25, 0.15)' }}
+                />
+                <Lock size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--primary)' }} />
+              </div>
+            </div>
+          )}
+
           <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={submitting}>
             {isRegister ? <UserPlus size={16} /> : <LogIn size={16} />}
-            {submitting ? 'Authenticating...' : isRegister ? 'Create Account' : 'Sign In'}
+            {submitting ? 'Authenticating...' : isRegister ? (otpSent ? 'Verify & Create Account' : 'Send Verification OTP') : 'Sign In'}
           </button>
+          
+          {isRegister && otpSent && (
+            <button 
+              type="button" 
+              onClick={() => { setOtpSent(false); setOtp(''); setInfoMessage(''); setError(''); }}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer', marginTop: '1rem', width: '100%', textDecoration: 'underline' }}
+            >
+              Change registration details
+            </button>
+          )}
         </form>
 
         {!isRegister && (

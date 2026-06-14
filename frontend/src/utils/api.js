@@ -73,9 +73,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ email, password })
     }),
-    register: (username, email, password, role = 'customer') => request('/auth/register', {
+    register: (username, email, password, role = 'customer', otp) => request('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ username, email, password, role })
+      body: JSON.stringify({ username, email, password, role, otp })
+    }),
+    requestRegisterOtp: (email) => request('/auth/register/request-otp', {
+      method: 'POST',
+      body: JSON.stringify({ email })
     }),
     getProfile: () => request('/auth/profile')
   },
