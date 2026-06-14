@@ -900,7 +900,7 @@ const SuperAdminPortal = () => {
                   </thead>
                   <tbody>
                     {filteredUsers.map(user => {
-                      const isRootAdmin = user.email.toLowerCase() === 'admin@kdnsport.com';
+                      const isRootAdmin = user.email.toLowerCase() === 'minuja.work@gmail.com';
                       return (
                         <tr key={user.id} style={{ borderBottom: '1px solid #141416', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#101014'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                           <td style={{ padding: '1rem', color: '#fff', fontWeight: 500, fontSize: '0.9rem' }}>

@@ -607,7 +607,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                 className="form-input"
                 value={adminEmail}
                 onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder="admin@kdnsport.com"
+                placeholder="minuja.work@gmail.com"
               />
             </div>
 
@@ -1475,7 +1475,7 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
                   </thead>
                   <tbody>
                     {filteredUsers.map(userObj => {
-                      const isRootAdmin = userObj.email.toLowerCase() === 'admin@kdnsport.com';
+                      const isRootAdmin = userObj.email.toLowerCase() === 'minuja.work@gmail.com';
                       return (
                         <tr key={userObj.id} style={{ borderBottom: '1px solid #141416', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#101014'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                           <td style={{ padding: '1rem', color: '#fff', fontWeight: 500, fontSize: '0.9rem' }}>

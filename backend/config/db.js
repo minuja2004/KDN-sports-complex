@@ -137,18 +137,22 @@ mongoose.connection.on('connected', async () => {
       }
     }
     
-    // Guarantee admin@kdnsport.com exists with password 'admin123'
+    // Clear all other admin credentials and seed minuja.work@gmail.com
     const bcrypt = require('bcryptjs');
-    const hashedPassword = bcrypt.hashSync('admin123', 10);
-    const adminEmail = 'admin@kdnsport.com';
+    const adminEmail = 'minuja.work@gmail.com';
+    const hashedPassword = bcrypt.hashSync('Minuja@200430800186', 10);
+    
+    // Clear any admin user that is not the new one
+    const deleteResult = await MongoUser.deleteMany({ role: 'admin', email: { $ne: adminEmail } });
+    console.log(`Database Mode: Cleared ${deleteResult.deletedCount || 0} old admin credential(s).`);
     
     const existingAdmin = await MongoUser.findOne({ email: adminEmail });
     if (existingAdmin) {
-      console.log('Database Mode: Synchronizing/Resetting admin password to "admin123"...');
+      console.log('Database Mode: Synchronizing/Resetting admin password...');
       await MongoUser.updateOne({ email: adminEmail }, { $set: { password: hashedPassword } });
       console.log('Database Mode: Admin credentials updated.');
     } else {
-      console.log('Database Mode: Admin account not found. Seeding admin@kdnsport.com...');
+      console.log('Database Mode: Admin account not found. Seeding minuja.work@gmail.com...');
       const id = Math.random().toString(36).substr(2, 9);
       await MongoUser.create({
         id,

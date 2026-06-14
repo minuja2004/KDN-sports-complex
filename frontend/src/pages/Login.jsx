@@ -416,8 +416,8 @@ const Login = ({ onLoginSuccess }) => {
           <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
             <span>Demo standard admin credentials:</span>
             <div style={{ backgroundColor: 'var(--bg-surface-elevated)', padding: '0.5rem', borderRadius: '4px', marginTop: '0.5rem', border: '1px solid var(--border)' }}>
-              Email: <code style={{ color: 'var(--primary)' }}>admin@kdnsport.com</code><br/>
-              Password: <code style={{ color: 'var(--primary)' }}>admin123</code>
+              Email: <code style={{ color: 'var(--primary)' }}>minuja.work@gmail.com</code><br/>
+              Password: <code style={{ color: 'var(--primary)' }}>Minuja@200430800186</code>
             </div>
           </div>
         )}
