@@ -62,6 +62,8 @@ const Login = ({ onLoginSuccess }) => {
   const [otp, setOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showLoginOtpInput, setShowLoginOtpInput] = useState(false);
+  const [loginOtp, setLoginOtp] = useState('');
 
   const strength = getPasswordStrength(formData.password);
 
@@ -129,7 +131,22 @@ const Login = ({ onLoginSuccess }) => {
           setSubmitting(false);
           return;
         }
-        result = await api.auth.login(formData.email, formData.password);
+        if (showLoginOtpInput) {
+          if (!loginOtp) {
+            setError('Please enter the verification code.');
+            setSubmitting(false);
+            return;
+          }
+          result = await api.auth.login(formData.email, formData.password, loginOtp);
+        } else {
+          result = await api.auth.login(formData.email, formData.password);
+          if (result && result.otpRequired) {
+            setShowLoginOtpInput(true);
+            setInfoMessage(result.message || 'Verification code sent to your email.');
+            setSubmitting(false);
+            return;
+          }
+        }
       }
 
       // Success
@@ -156,7 +173,7 @@ const Login = ({ onLoginSuccess }) => {
         {/* Toggle tabs */}
         <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '2rem' }}>
           <button
-            onClick={() => { setIsRegister(false); setError(''); setInfoMessage(''); setOtpSent(false); setOtp(''); }}
+            onClick={() => { setIsRegister(false); setError(''); setInfoMessage(''); setOtpSent(false); setOtp(''); setShowLoginOtpInput(false); setLoginOtp(''); }}
             style={{
               flex: 1,
               background: 'none',
@@ -172,7 +189,7 @@ const Login = ({ onLoginSuccess }) => {
             Sign In
           </button>
           <button
-            onClick={() => { setIsRegister(true); setError(''); setInfoMessage(''); setOtpSent(false); setOtp(''); }}
+            onClick={() => { setIsRegister(true); setError(''); setInfoMessage(''); setOtpSent(false); setOtp(''); setShowLoginOtpInput(false); setLoginOtp(''); }}
             style={{
               flex: 1,
               background: 'none',
@@ -276,7 +293,7 @@ const Login = ({ onLoginSuccess }) => {
                 type="email"
                 name="email"
                 required
-                disabled={otpSent}
+                disabled={otpSent || showLoginOtpInput}
                 className="form-input"
                 placeholder="you@example.com"
                 value={formData.email}
@@ -301,7 +318,7 @@ const Login = ({ onLoginSuccess }) => {
                 type={showPassword ? "text" : "password"}
                 name="password"
                 required
-                disabled={otpSent}
+                disabled={otpSent || showLoginOtpInput}
                 className="form-input"
                 placeholder="••••••••"
                 value={formData.password}
@@ -396,9 +413,32 @@ const Login = ({ onLoginSuccess }) => {
             </div>
           )}
 
+          {!isRegister && showLoginOtpInput && (
+            <div className="form-group animate-fade-in" style={{ marginBottom: '2rem' }}>
+              <label className="form-label" style={{ color: 'var(--primary)', fontWeight: 'bold' }}>Admin Verification Code</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  required
+                  placeholder="Enter 6-digit OTP code"
+                  className="form-input"
+                  value={loginOtp}
+                  onChange={(e) => setLoginOtp(e.target.value)}
+                  style={{ paddingLeft: '2.5rem', borderColor: 'var(--primary)', boxShadow: '0 0 5px rgba(240, 129, 25, 0.15)' }}
+                />
+                <Lock size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--primary)' }} />
+              </div>
+            </div>
+          )}
+
           <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={submitting}>
             {isRegister ? <UserPlus size={16} /> : <LogIn size={16} />}
-            {submitting ? 'Authenticating...' : isRegister ? (otpSent ? 'Verify & Create Account' : 'Send Verification OTP') : 'Sign In'}
+            {submitting 
+              ? 'Authenticating...' 
+              : isRegister 
+                ? (otpSent ? 'Verify & Create Account' : 'Send Verification OTP') 
+                : (showLoginOtpInput ? 'Verify OTP & Sign In' : 'Sign In')
+            }
           </button>
           
           {isRegister && otpSent && (
@@ -408,6 +448,16 @@ const Login = ({ onLoginSuccess }) => {
               style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer', marginTop: '1rem', width: '100%', textDecoration: 'underline' }}
             >
               Change registration details
+            </button>
+          )}
+
+          {!isRegister && showLoginOtpInput && (
+            <button 
+              type="button" 
+              onClick={() => { setShowLoginOtpInput(false); setLoginOtp(''); setInfoMessage(''); setError(''); }}
+              style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '0.8rem', cursor: 'pointer', marginTop: '1rem', width: '100%', textDecoration: 'underline' }}
+            >
+              Change login details
             </button>
           )}
         </form>

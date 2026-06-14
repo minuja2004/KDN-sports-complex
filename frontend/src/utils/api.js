@@ -69,9 +69,9 @@ const request = async (endpoint, options = {}) => {
 export const api = {
   // Authentication
   auth: {
-    login: (email, password) => request('/auth/login', {
+    login: (email, password, otp) => request('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, otp })
     }),
     register: (username, email, password, role = 'customer', otp, phone) => request('/auth/register', {
       method: 'POST',

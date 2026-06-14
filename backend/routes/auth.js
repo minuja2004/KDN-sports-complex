@@ -7,6 +7,67 @@ const { verifyToken } = require('../middleware/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_kdn_jwt_token_key_12345';
 
+const nodemailer = require('nodemailer');
+
+const sendEmailOtp = async (email, otp, isLogin = false) => {
+  const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
+  const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
+  const SMTP_USER = process.env.SMTP_USER;
+  const SMTP_PASS = process.env.SMTP_PASS;
+
+  console.log('\n==================================================');
+  console.log(`✉️ [ADMIN/CUSTOMER OTP GENERATED]`);
+  console.log(`Type: ${isLogin ? 'Admin Login' : 'Registration'}`);
+  console.log(`Email: ${email}`);
+  console.log(`OTP: ${otp}`);
+  console.log('==================================================\n');
+
+  if (!SMTP_USER || !SMTP_PASS) {
+    return false;
+  }
+
+  try {
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465,
+      auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASS
+      }
+    });
+
+    const subject = isLogin 
+      ? '🔐 KDN Sport Complex - Admin Security Verification Code'
+      : '✉️ KDN Sport Complex - Validate Your Email Address';
+    
+    const headerTitle = isLogin ? 'Admin Secure Login' : 'Email Verification';
+    const bodyMessage = isLogin
+      ? 'An administrator login attempt was initiated for your account. To authenticate and access the admin panel, please enter the following verification code:'
+      : 'Welcome to KDN Sport Complex! To complete your registration and activate your customer account, please verify your email address by entering the following security code:';
+
+    await transporter.sendMail({
+      from: `"KDN Sport Complex Portal" <${SMTP_USER}>`,
+      to: email,
+      subject: subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 25px; border: 1px solid #222; border-radius: 8px; background-color: #121212; color: #fff;">
+          <h2 style="color: #F08119; text-align: center; border-bottom: 2px solid #F08119; padding-bottom: 12px; margin-top: 0;">${headerTitle}</h2>
+          <p style="font-size: 15px; line-height: 1.6;">${bodyMessage}</p>
+          <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; text-align: center; margin: 30px 0; padding: 15px; border-radius: 6px; background-color: #1a1a1a; border: 1px dashed #F08119; color: #F08119;">
+            ${otp}
+          </div>
+          <p style="font-size: 13px; color: #888; text-align: center;">This code is private and expires in 10 minutes. If you did not request this login, please change your password immediately.</p>
+        </div>
+      `
+    });
+    return true;
+  } catch (err) {
+    console.error('SMTP Mail send failed:', err.message);
+    return false;
+  }
+};
+
 // POST /api/auth/register/request-otp - Send OTP verification code to customer email
 router.post('/register/request-otp', async (req, res) => {
   const { email } = req.body;
@@ -41,54 +102,7 @@ router.post('/register/request-otp', async (req, res) => {
       await OtpVerifications.create({ email, otp, otpExpiry: expiry.toISOString() });
     }
 
-    console.log('\n==================================================');
-    console.log('✉️ [CUSTOMER REGISTRATION OTP GENERATED]');
-    console.log(`Email: ${email}`);
-    console.log(`OTP: ${otp}`);
-    console.log(`Expires: ${expiry.toLocaleTimeString()}`);
-    console.log('==================================================\n');
-
-    let emailSent = false;
-
-    // Send email via Gmail SMTP
-    const SMTP_HOST = process.env.SMTP_HOST || 'smtp.gmail.com';
-    const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
-    const SMTP_USER = process.env.SMTP_USER;
-    const SMTP_PASS = process.env.SMTP_PASS;
-
-    if (SMTP_USER && SMTP_PASS) {
-      try {
-        const nodemailer = require('nodemailer');
-        const transporter = nodemailer.createTransport({
-          host: SMTP_HOST,
-          port: SMTP_PORT,
-          secure: SMTP_PORT === 465,
-          auth: {
-            user: SMTP_USER,
-            pass: SMTP_PASS
-          }
-        });
-
-        await transporter.sendMail({
-          from: `"KDN Sport Complex Portal" <${SMTP_USER}>`,
-          to: email,
-          subject: '✉️ KDN Sport Complex - Validate Your Email Address',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 25px; border: 1px solid #222; border-radius: 8px; background-color: #121212; color: #fff;">
-              <h2 style="color: #F08119; text-align: center; border-bottom: 2px solid #F08119; padding-bottom: 12px; margin-top: 0;">Email Verification</h2>
-              <p style="font-size: 15px; line-height: 1.6;">Welcome to KDN Sport Complex! To complete your registration and activate your customer account, please verify your email address by entering the following security code:</p>
-              <div style="font-size: 32px; font-weight: bold; letter-spacing: 6px; text-align: center; margin: 30px 0; padding: 15px; border-radius: 6px; background-color: #1a1a1a; border: 1px dashed #F08119; color: #F08119;">
-                ${otp}
-              </div>
-              <p style="font-size: 13px; color: #888; text-align: center;">This code is private and expires in 10 minutes. If you did not request this, please disregard this email.</p>
-            </div>
-          `
-        });
-        emailSent = true;
-      } catch (err) {
-        console.error('SMTP Mail send failed:', err.message);
-      }
-    }
+    const emailSent = await sendEmailOtp(email, otp, false);
 
     res.json({
       success: true,
@@ -179,9 +193,9 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// POST /api/auth/login - User login
+// POST /api/auth/login - User login (with admin 2FA OTP)
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, otp } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ message: 'Email and password are required' });
@@ -200,6 +214,46 @@ router.post('/login', async (req, res) => {
     const isMatch = bcrypt.compareSync(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    // If user is admin, enforce 2FA OTP check
+    if (user.role === 'admin') {
+      if (!otp) {
+        // Generate and send OTP
+        const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiry = new Date();
+        expiry.setMinutes(expiry.getMinutes() + 10); // 10 minutes expiry
+
+        const existingVerification = await OtpVerifications.findOne({ email });
+        if (existingVerification) {
+          await OtpVerifications.updateOne({ email }, { otp: generatedOtp, otpExpiry: expiry.toISOString() });
+        } else {
+          await OtpVerifications.create({ email, otp: generatedOtp, otpExpiry: expiry.toISOString() });
+        }
+
+        const emailSent = await sendEmailOtp(email, generatedOtp, true);
+
+        return res.json({
+          otpRequired: true,
+          message: emailSent 
+            ? 'A 6-digit verification code has been sent to your administrator email.'
+            : 'Verification code generated. (Bypassed SMTP send, code printed to backend console logs)'
+        });
+      } else {
+        // Verify OTP
+        const verification = await OtpVerifications.findOne({ email });
+        if (!verification || verification.otp !== otp) {
+          return res.status(400).json({ message: 'Incorrect verification code.' });
+        }
+
+        const expiryTime = new Date(verification.otpExpiry);
+        if (new Date() > expiryTime) {
+          return res.status(400).json({ message: 'Verification code has expired. Please try signing in again.' });
+        }
+
+        // Delete verification record
+        await OtpVerifications.deleteOne({ email });
+      }
     }
 
     // Create JWT
