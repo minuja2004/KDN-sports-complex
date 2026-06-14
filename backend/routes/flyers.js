@@ -9,11 +9,6 @@ const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'workzeez2026@gmail
 
 // Custom middleware to verify the Developer Super Admin token
 const verifySecretAdminToken = async (req, res, next) => {
-  // If in local development, bypass token verification for ease of use
-  if (process.env.NODE_ENV !== 'production') {
-    return next();
-  }
-
   const authHeader = req.headers['authorization'];
   if (!authHeader) {
     return res.status(401).json({ message: 'Admin authorization token required.' });

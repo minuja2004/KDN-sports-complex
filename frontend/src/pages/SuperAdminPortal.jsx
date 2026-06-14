@@ -38,10 +38,12 @@ const SuperAdminPortal = () => {
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    // Check if secret token is present in localStorage or if in dev mode
-    const isDev = import.meta.env.DEV;
     const secretToken = localStorage.getItem('kdn_secret_token');
-    setHasSecretToken(isDev || !!secretToken);
+    if (!secretToken) {
+      navigate('/secret-gatekeeper');
+      return;
+    }
+    setHasSecretToken(true);
 
     // Fetch flyers and site status on component mount
     fetchFlyers();

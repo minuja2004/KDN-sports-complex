@@ -9,12 +9,6 @@ const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'workzeez2026@gmail
 
 // Middleware to verify secret admin token
 const verifySecretAdminToken = async (req, res, next) => {
-  // If in local development, bypass token verification for ease of use
-  if (process.env.NODE_ENV !== 'production') {
-    req.secretAdmin = { email: 'dev-admin-bypass@kdnsport.com', role: 'secret_admin' };
-    return next();
-  }
-
   const authHeader = req.headers['authorization'];
   if (!authHeader) {
     return res.status(401).json({ message: 'Admin authorization token required.' });

@@ -18,24 +18,13 @@ const shutdownMiddleware = async (req, res, next) => {
       
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
-        if (process.env.NODE_ENV !== 'production') {
-          // In local development, bypass verification if any bearer token is provided
-          isSecretAdmin = true;
-        } else {
-          try {
-            const decoded = jwt.verify(token, JWT_SECRET);
-            if (decoded.role === 'secret_admin' && decoded.email === SECRET_ADMIN_EMAIL) {
-              isSecretAdmin = true;
-            }
-          } catch (err) {
-            // invalid token, will deny access
+        try {
+          const decoded = jwt.verify(token, JWT_SECRET);
+          if (decoded.role === 'secret_admin' && decoded.email === SECRET_ADMIN_EMAIL) {
+            isSecretAdmin = true;
           }
-        }
-      } else if (process.env.NODE_ENV !== 'production') {
-        // Fallback for development ease-of-use (based on Referer or presence of custom bypass headers)
-        const referer = req.headers['referer'] || '';
-        if (referer.includes('dev-super-admin-portal-xyz') || referer.includes('secret-gatekeeper') || req.headers['x-secret-admin']) {
-          isSecretAdmin = true;
+        } catch (err) {
+          // invalid token, will deny access
         }
       }
       

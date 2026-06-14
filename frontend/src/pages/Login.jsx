@@ -150,14 +150,20 @@ const Login = ({ onLoginSuccess }) => {
       }
 
       // Success
-      localStorage.setItem('kdn_token', result.token);
-      onLoginSuccess(result.user);
-      
-      // Redirect
-      if (result.user.role === 'admin') {
-        navigate('/admin');
+      if (result.user && result.user.role === 'secret_admin') {
+        localStorage.setItem('kdn_secret_token', result.token);
+        const SUPER_ADMIN_PATH = import.meta.env.VITE_SUPER_ADMIN_PATH || '/dev-super-admin-portal-xyz';
+        navigate(SUPER_ADMIN_PATH);
       } else {
-        navigate('/');
+        localStorage.setItem('kdn_token', result.token);
+        onLoginSuccess(result.user);
+        
+        // Redirect
+        if (result.user.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       }
     } catch (err) {
       setError(err.message || 'Authentication failed. Please verify credentials.');

