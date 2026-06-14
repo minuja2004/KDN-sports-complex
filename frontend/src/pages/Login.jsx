@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
-import { LogIn, UserPlus, Mail, Lock, User, ShieldAlert } from 'lucide-react';
+import { LogIn, UserPlus, Mail, Lock, User, ShieldAlert, Phone } from 'lucide-react';
 
 const Login = ({ onLoginSuccess }) => {
   const navigate = useNavigate();
@@ -9,7 +9,9 @@ const Login = ({ onLoginSuccess }) => {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
+    phone: '',
     password: '',
+    confirmPassword: '',
     role: 'customer' // customer or admin (for ease of local testing)
   });
   const [error, setError] = useState('');
@@ -32,11 +34,27 @@ const Login = ({ onLoginSuccess }) => {
     try {
       let result;
       if (isRegister) {
-        if (!formData.username || !formData.email || !formData.password) {
+        if (!formData.username || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
           setError('All fields are required.');
           setSubmitting(false);
           return;
         }
+
+        // Passwords match validation
+        if (formData.password !== formData.confirmPassword) {
+          setError('Passwords do not match.');
+          setSubmitting(false);
+          return;
+        }
+
+        // Strong password regex check
+        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!strongPasswordRegex.test(formData.password)) {
+          setError('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (e.g. @, $, !, %, *, ?, &).');
+          setSubmitting(false);
+          return;
+        }
+
         if (!otpSent) {
           // Request OTP
           const response = await api.auth.requestRegisterOtp(formData.email);
@@ -56,7 +74,8 @@ const Login = ({ onLoginSuccess }) => {
             formData.email,
             formData.password,
             formData.role,
-            otp
+            otp,
+            formData.phone
           );
         }
       } else {
@@ -166,23 +185,43 @@ const Login = ({ onLoginSuccess }) => {
 
         <form onSubmit={handleSubmit}>
           {isRegister && (
-            <div className="form-group">
-              <label className="form-label">Username</label>
-              <div style={{ position: 'relative' }}>
-                <input
-                  type="text"
-                  name="username"
-                  required
-                  disabled={otpSent}
-                  className="form-input"
-                  placeholder="Username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  style={{ paddingLeft: '2.5rem' }}
-                />
-                <User size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
+            <>
+              <div className="form-group">
+                <label className="form-label">Username</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="text"
+                    name="username"
+                    required
+                    disabled={otpSent}
+                    className="form-input"
+                    placeholder="Username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    style={{ paddingLeft: '2.5rem' }}
+                  />
+                  <User size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
+                </div>
               </div>
-            </div>
+
+              <div className="form-group">
+                <label className="form-label">Phone Number</label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type="tel"
+                    name="phone"
+                    required
+                    disabled={otpSent}
+                    className="form-input"
+                    placeholder="e.g. 0771234567"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    style={{ paddingLeft: '2.5rem' }}
+                  />
+                  <Phone size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
+                </div>
+              </div>
+            </>
           )}
 
           <div className="form-group">
@@ -203,7 +242,7 @@ const Login = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          <div className="form-group" style={{ marginBottom: isRegister && otpSent ? '1rem' : '2rem' }}>
+          <div className="form-group" style={!isRegister ? { marginBottom: '2rem' } : undefined}>
             <label className="form-label">Password</label>
             <div style={{ position: 'relative' }}>
               <input
@@ -220,6 +259,26 @@ const Login = ({ onLoginSuccess }) => {
               <Lock size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
             </div>
           </div>
+
+          {isRegister && (
+            <div className="form-group" style={{ marginBottom: otpSent ? '1rem' : '2rem' }}>
+              <label className="form-label">Confirm Password</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  required
+                  disabled={otpSent}
+                  className="form-input"
+                  placeholder="••••••••"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  style={{ paddingLeft: '2.5rem' }}
+                />
+                <Lock size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
+              </div>
+            </div>
+          )}
 
           {isRegister && otpSent && (
             <div className="form-group animate-fade-in" style={{ marginBottom: '2rem' }}>

@@ -19,6 +19,7 @@ const UserSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true },
   username: { type: String, required: true },
   email: { type: String, required: true, unique: true },
+  phone: { type: String, default: "" },
   password: { type: String, required: true },
   role: { type: String, default: 'customer' },
   isActive: { type: Boolean, default: true },

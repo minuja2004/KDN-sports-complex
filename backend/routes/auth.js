@@ -103,10 +103,16 @@ router.post('/register/request-otp', async (req, res) => {
 
 // POST /api/auth/register - Register a new user with OTP check
 router.post('/register', async (req, res) => {
-  const { username, email, password, role, otp } = req.body;
+  const { username, email, password, role, otp, phone } = req.body;
 
-  if (!username || !email || !password || !otp) {
-    return res.status(400).json({ message: 'Username, email, password, and OTP verification code are required.' });
+  if (!username || !email || !password || !otp || !phone) {
+    return res.status(400).json({ message: 'Username, email, phone number, password, and OTP verification code are required.' });
+  }
+
+  // Strong password check
+  const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  if (!strongPasswordRegex.test(password)) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character.' });
   }
 
   try {
@@ -147,6 +153,7 @@ router.post('/register', async (req, res) => {
     const newUser = await Users.create({
       username,
       email,
+      phone: phone || '',
       password: hashedPassword,
       role: finalRole
     });
