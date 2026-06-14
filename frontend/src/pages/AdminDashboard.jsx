@@ -725,14 +725,6 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
           <UsersIcon size={16} />
           User Account Controls
         </button>
-        <button
-          onClick={() => setActiveTab('lockdown')}
-          className={`btn ${activeTab === 'lockdown' ? 'btn-primary' : 'btn-secondary'}`}
-          style={{ padding: '0.5rem 1.25rem', fontSize: '0.9rem' }}
-        >
-          <Power size={16} />
-          Global Lockdown ({isShutdown ? 'OFFLINE' : 'ONLINE'})
-        </button>
       </div>
 
       {/* Tab Panels */}
@@ -1563,111 +1555,6 @@ const AdminDashboard = ({ user, onLoginSuccess }) => {
           </div>
         )}
 
-        {/* Tab 8: Global Site Lockdown */}
-        {activeTab === 'lockdown' && (
-          <div className="card animate-fade-in" style={{ 
-            backgroundColor: '#141416', 
-            border: '1px solid var(--border)', 
-            padding: '2.5rem', 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center', 
-            gap: '2rem',
-            textAlign: 'center' 
-          }}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', color: 'var(--primary)' }}>
-              <ShieldAlert size={48} style={{ color: isShutdown ? '#ef4444' : '#22c55e' }} />
-              <h3 style={{ fontSize: '1.5rem', fontFamily: 'Outfit', fontWeight: 600, color: '#fff', margin: 0 }}>Global Website Shutdown controls</h3>
-              <p className="text-muted" style={{ fontSize: '0.9rem', maxWidth: '500px', margin: 0, lineHeight: '1.6' }}>
-                Manage emergency maintenance triggers. Setting status to Offline immediately blocks customers and normal administrators from accessing public interfaces.
-              </p>
-            </div>
-
-            {lockdownError && (
-              <div style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--error)', padding: '0.75rem', borderRadius: '6px', color: '#f87171', fontSize: '0.85rem' }}>
-                {lockdownError}
-              </div>
-            )}
-
-            {lockdownSuccess && (
-              <div style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid #22c55e', padding: '0.75rem', borderRadius: '6px', color: '#4ade80', fontSize: '0.85rem' }}>
-                {lockdownSuccess}
-              </div>
-            )}
-
-            {/* Current Status Box */}
-            <div style={{
-              backgroundColor: isShutdown ? 'rgba(239, 68, 68, 0.05)' : 'rgba(34, 197, 94, 0.05)',
-              border: isShutdown ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid rgba(34, 197, 94, 0.2)',
-              borderRadius: '8px',
-              padding: '2rem',
-              width: '100%',
-              maxWidth: '480px'
-            }}>
-              <span className="text-muted" style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 600 }}>
-                Current Platform Status
-              </span>
-              <h2 style={{
-                fontSize: '2rem',
-                fontFamily: 'Outfit',
-                fontWeight: 800,
-                color: isShutdown ? '#f87171' : '#4ade80',
-                marginTop: '0.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                margin: '0.5rem 0'
-              }}>
-                <Power size={24} />
-                {isShutdown ? 'OFFLINE (SHUTDOWN)' : 'ONLINE (OPERATIONAL)'}
-              </h2>
-              <p className="text-muted" style={{ fontSize: '0.85rem', margin: 0, marginTop: '0.75rem', lineHeight: '1.5' }}>
-                {isShutdown 
-                  ? 'All checkout carts, badminton schedules, physiotherapy forms, and normal dashboards are locked. A maintenance screen is shown instead.'
-                  : 'Public pages are operational. Customers can purchase supplements and book slots. Administrators can manage inventories.'
-                }
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div style={{ width: '100%', maxWidth: '340px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {isShutdown ? (
-                <button
-                  onClick={() => handleToggleLockdown(false)}
-                  disabled={lockdownLoading}
-                  className="btn btn-primary"
-                  style={{ 
-                    width: '100%', 
-                    padding: '1rem', 
-                    backgroundColor: '#22c55e', 
-                    borderColor: '#22c55e',
-                    color: '#fff',
-                    fontWeight: 700
-                  }}
-                >
-                  {lockdownLoading ? 'Deactivating Shutdown...' : 'RESTORE SITE ONLINE'}
-                </button>
-              ) : (
-                <button
-                  onClick={() => handleToggleLockdown(true)}
-                  disabled={lockdownLoading}
-                  className="btn btn-danger"
-                  style={{ 
-                    width: '100%', 
-                    padding: '1rem', 
-                    backgroundColor: '#ef4444', 
-                    borderColor: '#ef4444',
-                    color: '#fff',
-                    fontWeight: 700
-                  }}
-                >
-                  {lockdownLoading ? 'Activating Shutdown...' : '🚨 TRIGGER MASTER SHUTDOWN'}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* MODAL 1: ADD/EDIT SUPPLEMENT PRODUCT */}

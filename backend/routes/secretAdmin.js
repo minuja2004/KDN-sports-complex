@@ -177,6 +177,10 @@ router.post('/verify-otp', async (req, res) => {
 
 // POST /api/secret/toggle-shutdown - Turn site on/off (Requires Secret Admin Token)
 router.post('/toggle-shutdown', verifySecretAdminToken, async (req, res) => {
+  if (req.secretAdmin.role !== 'secret_admin') {
+    return res.status(403).json({ message: 'Forbidden: Lockdown controls are restricted to the developer master console.' });
+  }
+
   const { shutdown } = req.body;
 
   if (shutdown === undefined) {
