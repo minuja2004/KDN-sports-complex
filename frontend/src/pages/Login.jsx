@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../utils/api';
-import { LogIn, UserPlus, Mail, Lock, User, ShieldAlert, Phone } from 'lucide-react';
+import { LogIn, UserPlus, Mail, Lock, User, ShieldAlert, Phone, Eye, EyeOff } from 'lucide-react';
 
 const getPasswordStrength = (password) => {
   if (!password) return { label: '', color: 'transparent', width: '0%', criteriaCount: 0 };
@@ -60,6 +60,8 @@ const Login = ({ onLoginSuccess }) => {
   const [submitting, setSubmitting] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const strength = getPasswordStrength(formData.password);
 
@@ -296,7 +298,7 @@ const Login = ({ onLoginSuccess }) => {
             </div>
             <div style={{ position: 'relative' }}>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 required
                 disabled={otpSent}
@@ -304,9 +306,27 @@ const Login = ({ onLoginSuccess }) => {
                 placeholder="••••••••"
                 value={formData.password}
                 onChange={handleInputChange}
-                style={{ paddingLeft: '2.5rem' }}
+                style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
               />
               <Lock size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '12px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                  padding: 0,
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
             {isRegister && formData.password && (
               <div style={{ height: '4px', width: '100%', backgroundColor: '#222224', borderRadius: '2px', marginTop: '6px', overflow: 'hidden' }}>
@@ -325,7 +345,7 @@ const Login = ({ onLoginSuccess }) => {
               <label className="form-label">Confirm Password</label>
               <div style={{ position: 'relative' }}>
                 <input
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   required
                   disabled={otpSent}
@@ -333,9 +353,27 @@ const Login = ({ onLoginSuccess }) => {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  style={{ paddingLeft: '2.5rem' }}
+                  style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
                 />
                 <Lock size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '12px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    padding: 0,
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}
+                >
+                  {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
           )}
