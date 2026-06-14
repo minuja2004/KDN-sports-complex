@@ -34,7 +34,10 @@ const sendEmailOtp = async (email, otp, isLogin = false) => {
       auth: {
         user: SMTP_USER,
         pass: SMTP_PASS
-      }
+      },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 5000
     });
 
     const subject = isLogin 
