@@ -163,7 +163,7 @@ const Shop = ({ user, cart = [], addToCart }) => {
           <p className="text-muted">No items matched your search filters. Try looking for another category.</p>
         </div>
       ) : (
-        <div className="grid-3" style={{ marginBottom: '4rem' }}>
+        <div className="product-grid" style={{ marginBottom: '4rem' }}>
           {filteredProducts.map(product => (
             <div 
               key={product.id} 
@@ -226,7 +226,7 @@ const Shop = ({ user, cart = [], addToCart }) => {
               </div>
 
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <div className="price-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>
                     {product.isMultipleOption && product.selections && product.selections.length > 0
                       ? `From රු ${Math.min(...product.selections.map(s => s.price)).toFixed(2)}`
@@ -237,7 +237,7 @@ const Shop = ({ user, cart = [], addToCart }) => {
                   </span>
                 </div>
 
-                <div style={{ 
+                <div className="koko-installment-row" style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: '6px', 
@@ -291,7 +291,7 @@ const Shop = ({ user, cart = [], addToCart }) => {
                   ) : null}
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }} onClick={(e) => e.stopPropagation()}>
+                <div className="product-card-actions" style={{ display: 'flex', gap: '0.5rem', width: '100%' }} onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={() => {
                       if (product.isMultipleOption) {

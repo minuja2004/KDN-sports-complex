@@ -325,7 +325,7 @@ const Home = () => {
               <p className="text-muted">No products available in the store yet.</p>
             </div>
           ) : (
-            <div className="grid-3" style={{ gap: '2rem' }}>
+            <div className="product-grid" style={{ gap: '2rem' }}>
               {products.slice(0, 3).map(product => (
                 <div 
                   key={product.id} 
@@ -370,7 +370,7 @@ const Home = () => {
                   </div>
 
                   <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div className="price-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                       <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#fff' }}>
                         {product.isMultipleOption && product.selections && product.selections.length > 0
                           ? `From රු ${Math.min(...product.selections.map(s => s.price)).toFixed(2)}`
@@ -382,7 +382,7 @@ const Home = () => {
                     </div>
 
                     {product.allowKoko && (
-                      <div style={{ 
+                      <div className="koko-installment-row" style={{ 
                         display: 'flex', 
                         alignItems: 'center', 
                         gap: '6px', 
@@ -418,7 +418,7 @@ const Home = () => {
                         e.stopPropagation();
                         navigate(`/shop/product/${product.id}`);
                       }}
-                      className="btn btn-primary"
+                      className="btn btn-primary product-card-actions"
                       style={{ width: '100%', padding: '0.6rem', fontSize: '0.85rem' }}
                     >
                       View Details
