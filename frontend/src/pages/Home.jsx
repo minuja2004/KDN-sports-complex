@@ -389,8 +389,32 @@ const Home = () => {
                         <span style={{ fontSize: '0.8rem', color: '#fbbf24' }}>★ {product.rating.toFixed(1)}</span>
                       </div>
 
-                      <h3 style={{ fontFamily: 'Outfit', fontSize: '1.2rem', marginBottom: '0.5rem' }}>{product.name}</h3>
-                      <p className="text-muted" style={{ fontSize: '0.8rem', lineHeight: '1.5', marginBottom: '1.5rem', minHeight: '50px' }}>
+                      <h3 style={{ 
+                        fontFamily: 'Outfit', 
+                        fontSize: '1.2rem', 
+                        marginBottom: '0.5rem',
+                        height: '28px',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 1,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'anywhere'
+                      }} title={product.name}>{product.name}</h3>
+                      <p className="text-muted" style={{ 
+                        fontSize: '0.8rem', 
+                        lineHeight: '1.5', 
+                        marginBottom: '1.5rem', 
+                        height: '36px',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        wordBreak: 'break-all',
+                        overflowWrap: 'anywhere'
+                      }}>
                         {product.description}
                       </p>
                     </div>
