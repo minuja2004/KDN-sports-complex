@@ -3,6 +3,70 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Dumbbell, Calendar, Activity, ShoppingBag, ArrowRight, CheckCircle, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { api } from '../utils/api';
 
+const Counter = ({ target, suffix = '', duration = 1500 }) => {
+  const [count, setCount] = useState(0);
+  const elementRef = useRef(null);
+
+  useEffect(() => {
+    let animationFrameId;
+    let startTime = null;
+    const targetValue = parseInt(target, 10);
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          startTime = null;
+          const animate = (timestamp) => {
+            if (!startTime) startTime = timestamp;
+            const progress = timestamp - startTime;
+            const percentage = Math.min(progress / duration, 1);
+            
+            // Quadratic ease-out easing function
+            const easeOutQuad = percentage * (2 - percentage);
+            setCount(Math.floor(easeOutQuad * targetValue));
+
+            if (percentage < 1) {
+              animationFrameId = requestAnimationFrame(animate);
+            } else {
+              setCount(targetValue);
+            }
+          };
+          animationFrameId = requestAnimationFrame(animate);
+        } else {
+          // Reset count to 0 when component scrolls out of viewport
+          setCount(0);
+          if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+          }
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    const currentElement = elementRef.current;
+    if (currentElement) {
+      observer.observe(currentElement);
+    }
+
+    return () => {
+      if (currentElement) {
+        observer.unobserve(currentElement);
+      }
+      observer.disconnect();
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
+    };
+  }, [target, duration]);
+
+  return (
+    <span ref={elementRef}>
+      {count.toLocaleString()}
+      {suffix}
+    </span>
+  );
+};
+
 const Home = () => {
   const navigate = useNavigate();
   const [flyers, setFlyers] = useState([]);
@@ -438,19 +502,27 @@ const Home = () => {
       <section style={{ backgroundColor: '#141416', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: '4rem 0' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '2rem', textAlign: 'center' }}>
           <div>
-            <h2 style={{ color: 'var(--primary)', fontSize: '2.5rem', fontFamily: 'Outfit', fontWeight: 800 }}>1,200+</h2>
+            <h2 style={{ color: 'var(--primary)', fontSize: '2.5rem', fontFamily: 'Outfit', fontWeight: 800 }}>
+              <Counter target="1200" suffix="+" />
+            </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.25rem' }}>Active Gym Members</p>
           </div>
           <div>
-            <h2 style={{ color: 'var(--primary)', fontSize: '2.5rem', fontFamily: 'Outfit', fontWeight: 800 }}>3</h2>
+            <h2 style={{ color: 'var(--primary)', fontSize: '2.5rem', fontFamily: 'Outfit', fontWeight: 800 }}>
+              <Counter target="3" />
+            </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.25rem' }}>International-grade Courts</p>
           </div>
           <div>
-            <h2 style={{ color: 'var(--primary)', fontSize: '2.5rem', fontFamily: 'Outfit', fontWeight: 800 }}>50+</h2>
+            <h2 style={{ color: 'var(--primary)', fontSize: '2.5rem', fontFamily: 'Outfit', fontWeight: 800 }}>
+              <Counter target="50" suffix="+" />
+            </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.25rem' }}>Supplements Cataloged</p>
           </div>
           <div>
-            <h2 style={{ color: 'var(--primary)', fontSize: '2.5rem', fontFamily: 'Outfit', fontWeight: 800 }}>4</h2>
+            <h2 style={{ color: 'var(--primary)', fontSize: '2.5rem', fontFamily: 'Outfit', fontWeight: 800 }}>
+              <Counter target="4" />
+            </h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '0.25rem' }}>Resident Doctors & Physios</p>
           </div>
         </div>
