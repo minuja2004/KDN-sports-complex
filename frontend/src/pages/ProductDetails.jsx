@@ -242,7 +242,7 @@ const ProductDetails = ({ user, addToCart }) => {
           </div>
 
           {/* Product Title */}
-          <h1 style={{ fontFamily: 'Outfit', fontSize: '2.2rem', marginBottom: '1rem', color: '#fff', lineHeight: '1.2' }}>
+          <h1 style={{ fontFamily: 'Outfit', fontSize: '2.2rem', marginBottom: '1rem', color: '#fff', lineHeight: '1.2', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
             {product.name}
           </h1>
 
@@ -496,7 +496,7 @@ const ProductDetails = ({ user, addToCart }) => {
           {/* Description */}
           <div style={{ marginBottom: '2rem' }}>
             <h3 style={{ fontSize: '1.05rem', color: '#fff', marginBottom: '0.5rem' }}>Product Overview</h3>
-            <p className="text-muted" style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>
+            <p className="text-muted" style={{ fontSize: '0.95rem', lineHeight: '1.6', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
               {(selectedSelection && selectedSelection.description) || product.description || 'No detailed description available for this supplement.'}
             </p>
           </div>

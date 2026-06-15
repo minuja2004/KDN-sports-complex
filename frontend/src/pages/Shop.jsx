@@ -194,8 +194,8 @@ const Shop = ({ user, cart = [], addToCart }) => {
                   <span style={{ fontSize: '0.8rem', color: '#fbbf24' }}>★ {product.rating.toFixed(1)}</span>
                 </div>
 
-                <h3 style={{ fontFamily: 'Outfit', fontSize: '1.2rem', marginBottom: '0.5rem' }}>{product.name}</h3>
-                <p className="text-muted" style={{ fontSize: '0.8rem', lineHeight: '1.5', marginBottom: '1.5rem', minHeight: '50px' }}>
+                <h3 style={{ fontFamily: 'Outfit', fontSize: '1.2rem', marginBottom: '0.5rem', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{product.name}</h3>
+                <p className="text-muted" style={{ fontSize: '0.8rem', lineHeight: '1.5', marginBottom: '1.5rem', minHeight: '50px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                   {product.description}
                 </p>
               </div>
