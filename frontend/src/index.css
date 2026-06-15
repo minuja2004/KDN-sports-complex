@@ -867,18 +867,18 @@ a {
   top: 50%;
   transform: translateY(-50%);
   z-index: 10;
-  background-color: rgba(20, 20, 22, 0.9);
-  border: 1px solid var(--border);
+  background-color: rgba(30, 30, 34, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: #fff;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6);
 }
 
 .slider-nav-btn:hover {
@@ -888,11 +888,11 @@ a {
 }
 
 .slider-nav-left {
-  left: -22px;
+  left: 0.5rem;
 }
 
 .slider-nav-right {
-  right: -22px;
+  right: 0.5rem;
 }
 
 @media (max-width: 1024px) {
