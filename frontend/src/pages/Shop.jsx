@@ -168,7 +168,7 @@ const Shop = ({ user, cart = [], addToCart }) => {
             <div 
               key={product.id} 
               className="card card-accent" 
-              style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', backgroundColor: '#141416', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
+              style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', backgroundColor: '#141416', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s' }}
               onClick={() => navigate(`/shop/product/${product.id}`)}
             >
               <div>
@@ -194,8 +194,33 @@ const Shop = ({ user, cart = [], addToCart }) => {
                   <span style={{ fontSize: '0.8rem', color: '#fbbf24' }}>★ {product.rating.toFixed(1)}</span>
                 </div>
 
-                <h3 style={{ fontFamily: 'Outfit', fontSize: '1.2rem', marginBottom: '0.5rem', wordBreak: 'break-word', overflowWrap: 'break-word' }}>{product.name}</h3>
-                <p className="text-muted" style={{ fontSize: '0.8rem', lineHeight: '1.5', marginBottom: '1.5rem', minHeight: '50px', wordBreak: 'break-word', overflowWrap: 'break-word' }}>
+                <h3 style={{ 
+                  fontFamily: 'Outfit', 
+                  fontSize: '1.2rem', 
+                  marginBottom: '0.5rem', 
+                  height: '28px',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 1,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  wordBreak: 'break-all',
+                  overflowWrap: 'anywhere'
+                }} title={product.name}>{product.name}</h3>
+                
+                <p className="text-muted" style={{ 
+                  fontSize: '0.8rem', 
+                  lineHeight: '1.5', 
+                  marginBottom: '1.5rem', 
+                  height: '36px',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  wordBreak: 'break-all',
+                  overflowWrap: 'anywhere'
+                }}>
                   {product.description}
                 </p>
               </div>
@@ -212,55 +237,59 @@ const Shop = ({ user, cart = [], addToCart }) => {
                   </span>
                 </div>
 
-                {product.allowKoko && (
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '6px', 
-                    fontSize: '0.8rem', 
-                    color: '#a0aec0', 
-                    marginTop: '-0.5rem', 
-                    marginBottom: '1rem' 
-                  }}>
-                    <span>
-                      or 3 X <strong style={{ color: '#fff' }}>
-                        {product.isMultipleOption && product.selections && product.selections.length > 0
-                          ? `From රු ${(Math.min(...product.selections.map(s => s.price)) / 3).toFixed(2)}`
-                          : `රු ${(product.price / 3).toFixed(2)}`}
-                      </strong> with
-                    </span>
-                    <svg viewBox="0 0 135 45" width="55" height="18" style={{ verticalAlign: 'middle', marginLeft: '3px', marginRight: '3px' }}>
-                      <defs>
-                        <pattern id="koko-stripes" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
-                          <rect width="4" height="4" fill="#00D2CA" />
-                          <line x1="0" y1="0" x2="0" y2="4" stroke="#0D1B50" strokeWidth="1.2" />
-                        </pattern>
-                      </defs>
-                      <text x="2" y="37" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
-                      <text x="3" y="36" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
-                      <text x="4" y="35" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
-                      <text x="5" y="34" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="#FFAEC9" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
-                    </svg>
-                    <span 
-                      style={{ 
-                        display: 'inline-flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        width: '14px', 
-                        height: '14px', 
-                        borderRadius: '50%', 
-                        backgroundColor: '#2d3748', 
-                        color: '#a0aec0', 
-                        fontSize: '9px', 
-                        fontWeight: 'bold', 
-                        cursor: 'help' 
-                      }} 
-                      title="Split your bill into 3 interest-free installments with Koko"
-                    >
-                      i
-                    </span>
-                  </div>
-                )}
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '6px', 
+                  fontSize: '0.8rem', 
+                  color: '#a0aec0', 
+                  marginTop: '-0.5rem', 
+                  marginBottom: '1rem',
+                  height: '18px',
+                  visibility: product.allowKoko ? 'visible' : 'hidden'
+                }}>
+                  {product.allowKoko ? (
+                    <>
+                      <span>
+                        or 3 X <strong style={{ color: '#fff' }}>
+                          {product.isMultipleOption && product.selections && product.selections.length > 0
+                            ? `From රු ${(Math.min(...product.selections.map(s => s.price)) / 3).toFixed(2)}`
+                            : `රු ${(product.price / 3).toFixed(2)}`}
+                        </strong> with
+                      </span>
+                      <svg viewBox="0 0 135 45" width="55" height="18" style={{ verticalAlign: 'middle', marginLeft: '3px', marginRight: '3px' }}>
+                        <defs>
+                          <pattern id="koko-stripes" width="4" height="4" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+                            <rect width="4" height="4" fill="#00D2CA" />
+                            <line x1="0" y1="0" x2="0" y2="4" stroke="#0D1B50" strokeWidth="1.2" />
+                          </pattern>
+                        </defs>
+                        <text x="2" y="37" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                        <text x="3" y="36" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                        <text x="4" y="35" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="url(#koko-stripes)" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                        <text x="5" y="34" fontFamily="'Arial Black', Impact, sans-serif" fontSize="32" fontWeight="900" fill="#FFAEC9" stroke="#0D1B50" strokeWidth="1.5" strokeLinejoin="round">KOKO</text>
+                      </svg>
+                      <span 
+                        style={{ 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          width: '14px', 
+                          height: '14px', 
+                          borderRadius: '50%', 
+                          backgroundColor: '#2d3748', 
+                          color: '#a0aec0', 
+                          fontSize: '9px', 
+                          fontWeight: 'bold', 
+                          cursor: 'help' 
+                        }} 
+                        title="Split your bill into 3 interest-free installments with Koko"
+                      >
+                        i
+                      </span>
+                    </>
+                  ) : null}
+                </div>
 
                 <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }} onClick={(e) => e.stopPropagation()}>
                   <button
