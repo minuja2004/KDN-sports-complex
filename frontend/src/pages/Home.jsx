@@ -499,37 +499,37 @@ const Home = () => {
       </section>
 
       {/* Info Stats Banner */}
-      <section style={{ backgroundColor: '#141416', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: '4.5rem 0' }}>
+      <section style={{ backgroundColor: '#141416', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)', padding: '5rem 0' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: '2.5rem', textAlign: 'center' }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '200px' }}>
-            <h2 style={{ color: '#ffffff', fontSize: '3.5rem', fontFamily: 'Montserrat, var(--font-display)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+            <h2 style={{ color: 'var(--primary)', fontSize: '4.5rem', fontFamily: 'Montserrat, var(--font-display)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
               <Counter target="1200" suffix="+" />
             </h2>
-            <p style={{ color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '0.5rem', lineHeight: 1.5, maxWidth: '160px', opacity: 0.9 }}>
+            <p style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '0.5rem', lineHeight: 1.5, maxWidth: '160px', opacity: 0.9 }}>
               Active Gym Members
             </p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '200px' }}>
-            <h2 style={{ color: '#ffffff', fontSize: '3.5rem', fontFamily: 'Montserrat, var(--font-display)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+            <h2 style={{ color: 'var(--primary)', fontSize: '4.5rem', fontFamily: 'Montserrat, var(--font-display)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
               <Counter target="3" />
             </h2>
-            <p style={{ color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '0.5rem', lineHeight: 1.5, maxWidth: '160px', opacity: 0.9 }}>
+            <p style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '0.5rem', lineHeight: 1.5, maxWidth: '160px', opacity: 0.9 }}>
               International Grade Courts
             </p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '200px' }}>
-            <h2 style={{ color: '#ffffff', fontSize: '3.5rem', fontFamily: 'Montserrat, var(--font-display)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+            <h2 style={{ color: 'var(--primary)', fontSize: '4.5rem', fontFamily: 'Montserrat, var(--font-display)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
               <Counter target="50" suffix="+" />
             </h2>
-            <p style={{ color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '0.5rem', lineHeight: 1.5, maxWidth: '160px', opacity: 0.9 }}>
+            <p style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '0.5rem', lineHeight: 1.5, maxWidth: '160px', opacity: 0.9 }}>
               Supplements Cataloged
             </p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: '200px' }}>
-            <h2 style={{ color: '#ffffff', fontSize: '3.5rem', fontFamily: 'Montserrat, var(--font-display)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+            <h2 style={{ color: 'var(--primary)', fontSize: '4.5rem', fontFamily: 'Montserrat, var(--font-display)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
               <Counter target="4" />
             </h2>
-            <p style={{ color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '0.5rem', lineHeight: 1.5, maxWidth: '160px', opacity: 0.9 }}>
+            <p style={{ color: '#ffffff', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em', marginTop: '0.5rem', lineHeight: 1.5, maxWidth: '160px', opacity: 0.9 }}>
               Resident Doctors & Physios
             </p>
           </div>
