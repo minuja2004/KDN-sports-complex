@@ -156,14 +156,7 @@ const Home = () => {
       <section 
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
-        style={{
-          position: 'relative',
-          width: '100%',
-          height: '520px',
-          overflow: 'hidden',
-          backgroundColor: '#0a0a0a',
-          borderBottom: '1px solid var(--border)'
-        }}
+        className="hero-section"
       >
         {activeSlides.map((slide, index) => {
           const isActive = index === currentSlide;
@@ -239,25 +232,11 @@ const Home = () => {
                     {slide.subtitle || "KDN COMPLEX PROMOTION"}
                   </span>
                   
-                  <h1 style={{
-                    fontFamily: 'Outfit',
-                    fontSize: '3.5rem',
-                    fontWeight: 800,
-                    lineHeight: '1.15',
-                    letterSpacing: '-0.02em',
-                    color: '#fff',
-                    margin: 0
-                  }}>
+                  <h1 className="hero-title">
                     {slide.title}
                   </h1>
 
-                  <p style={{
-                    color: 'var(--text-muted)',
-                    fontSize: '1.1rem',
-                    lineHeight: '1.6',
-                    margin: 0,
-                    maxWidth: '550px'
-                  }}>
+                  <p className="hero-description">
                     {slide.description || "Experience exclusive events, member perks, and targeted fitness packages designed to unlock your potential."}
                   </p>
 
@@ -280,55 +259,15 @@ const Home = () => {
           <>
             <button 
               onClick={(e) => { e.stopPropagation(); prevSlide(); }}
-              style={{
-                position: 'absolute',
-                left: '2rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                zIndex: 10,
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#fff',
-                width: '44px',
-                height: '44px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                opacity: isHovering ? 1 : 0,
-                transition: 'opacity 0.3s ease, background-color 0.2s, transform 0.2s',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--primary)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(0,0,0,0.5)'}
+              className="hero-arrow hero-arrow-left"
+              style={{ opacity: isHovering ? 1 : 0 }}
             >
               <ChevronLeft size={22} />
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); nextSlide(); }}
-              style={{
-                position: 'absolute',
-                right: '2rem',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                zIndex: 10,
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#fff',
-                width: '44px',
-                height: '44px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                opacity: isHovering ? 1 : 0,
-                transition: 'opacity 0.3s ease, background-color 0.2s, transform 0.2s',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = 'var(--primary)'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(0,0,0,0.5)'}
+              className="hero-arrow hero-arrow-right"
+              style={{ opacity: isHovering ? 1 : 0 }}
             >
               <ChevronRight size={22} />
             </button>

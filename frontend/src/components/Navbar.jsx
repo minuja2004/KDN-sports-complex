@@ -1,14 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Dumbbell, Calendar, Activity, ShoppingBag, Lock, LogIn, LogOut, LayoutDashboard } from 'lucide-react';
+import { Dumbbell, Calendar, Activity, ShoppingBag, Lock, LogIn, LogOut, LayoutDashboard, Menu, X } from 'lucide-react';
 
 const Navbar = ({ user, onLogout, cart = [], cartTotal, showCartDropdown, setShowCartDropdown }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [cartHovered, setCartHovered] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleMenu = () => setIsOpen(!isOpen);
+  const closeMenu = () => setIsOpen(false);
 
   const handleLogoutClick = () => {
     onLogout();
+    closeMenu();
     navigate('/');
   };
 
@@ -17,7 +22,7 @@ const Navbar = ({ user, onLogout, cart = [], cartTotal, showCartDropdown, setSho
   return (
     <nav className="navbar">
       <div className="container nav-wrapper">
-        <Link to="/" className="nav-logo">
+        <Link to="/" className="nav-logo" onClick={closeMenu}>
           {/* Custom SVG Sports Ring resembling KDN's logo theme */}
           <svg width="24" height="24" viewBox="0 0 24 24" className="logo-icon-svg">
             <polygon points="12,2 22,12 12,22 2,12" />
@@ -26,34 +31,39 @@ const Navbar = ({ user, onLogout, cart = [], cartTotal, showCartDropdown, setSho
           KDN<span>SPORT</span>
         </Link>
 
-        <ul className="nav-links">
+        {/* Mobile Toggle Button */}
+        <button className="nav-toggle" onClick={toggleMenu} aria-label="Toggle navigation">
+          {isOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        <ul className={`nav-links ${isOpen ? 'open' : ''}`}>
           {(!user || user.role !== 'admin') && (
             <>
               <li>
-                <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`}>
+                <Link to="/" className={`nav-link ${isActive('/') ? 'active' : ''}`} onClick={closeMenu}>
                   Home
                 </Link>
               </li>
               <li>
-                <Link to="/gym" className={`nav-link ${isActive('/gym') ? 'active' : ''}`}>
+                <Link to="/gym" className={`nav-link ${isActive('/gym') ? 'active' : ''}`} onClick={closeMenu}>
                   <Dumbbell size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
                   Gym
                 </Link>
               </li>
               <li>
-                <Link to="/badminton" className={`nav-link ${isActive('/badminton') ? 'active' : ''}`}>
+                <Link to="/badminton" className={`nav-link ${isActive('/badminton') ? 'active' : ''}`} onClick={closeMenu}>
                   <Calendar size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
                   Badminton
                 </Link>
               </li>
               <li>
-                <Link to="/physio" className={`nav-link ${isActive('/physio') ? 'active' : ''}`}>
+                <Link to="/physio" className={`nav-link ${isActive('/physio') ? 'active' : ''}`} onClick={closeMenu}>
                   <Activity size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
                   Physiotherapy
                 </Link>
               </li>
               <li>
-                <Link to="/shop" className={`nav-link ${isActive('/shop') ? 'active' : ''}`}>
+                <Link to="/shop" className={`nav-link ${isActive('/shop') ? 'active' : ''}`} onClick={closeMenu}>
                   <ShoppingBag size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
                   Shop
                 </Link>
@@ -63,7 +73,7 @@ const Navbar = ({ user, onLogout, cart = [], cartTotal, showCartDropdown, setSho
 
           {user && user.role === 'admin' && (
             <li>
-              <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`} style={{ color: '#F08119', fontWeight: 'bold' }}>
+              <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`} style={{ color: '#F08119', fontWeight: 'bold' }} onClick={closeMenu}>
                 <LayoutDashboard size={16} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
                 Admin Panel
               </Link>
@@ -81,6 +91,7 @@ const Navbar = ({ user, onLogout, cart = [], cartTotal, showCartDropdown, setSho
                 to="/cart" 
                 className={`nav-link ${isActive('/cart') ? 'active' : ''}`}
                 style={{ position: 'relative', display: 'flex', alignItems: 'center', padding: '0.4rem', borderRadius: '4px' }}
+                onClick={closeMenu}
               >
                 <ShoppingBag size={18} style={{ color: isActive('/cart') ? 'var(--primary)' : 'var(--text-muted)' }} />
                 {cart.length > 0 && (
@@ -118,7 +129,7 @@ const Navbar = ({ user, onLogout, cart = [], cartTotal, showCartDropdown, setSho
                         <span>Total:</span>
                         <strong>රු {cartTotal().toFixed(2)}</strong>
                       </div>
-                      <Link to="/cart" className="btn btn-primary" style={{ width: '100%', fontSize: '0.85rem', padding: '0.5rem' }}>
+                      <Link to="/cart" className="btn btn-primary" style={{ width: '100%', fontSize: '0.85rem', padding: '0.5rem' }} onClick={closeMenu}>
                         View Cart & Checkout
                       </Link>
                     </div>
@@ -129,15 +140,15 @@ const Navbar = ({ user, onLogout, cart = [], cartTotal, showCartDropdown, setSho
           )}
 
           {user ? (
-            <li style={{ marginLeft: '1rem' }}>
-              <button onClick={handleLogoutClick} className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem' }}>
+            <li style={{ marginLeft: '1rem' }} className="nav-auth-btn">
+              <button onClick={handleLogoutClick} className="btn btn-secondary" style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', width: '100%' }}>
                 <LogOut size={14} />
                 Logout ({user.username})
               </button>
             </li>
           ) : (
-            <li style={{ marginLeft: '1rem' }}>
-              <Link to="/login" className="btn btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}>
+            <li style={{ marginLeft: '1rem' }} className="nav-auth-btn">
+              <Link to="/login" className="btn btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.85rem', width: '100%' }} onClick={closeMenu}>
                 <LogIn size={14} />
                 Sign In
               </Link>
